@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { KycStatus } from '@prisma/client';
+import { BookingStatus, KycStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class AdminService {
   async getStats() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const nonCancelled = { status: { notIn: ['CANCELLED'] as const } };
+    const notCancelled = { status: { notIn: [BookingStatus.CANCELLED] } };
 
     const [
       usersByRole,
@@ -20,24 +20,24 @@ export class AdminService {
       gmvMtd,
       commissionMtd,
       recentBookings,
-    ] = await this.prisma.$transaction([
+    ] = await Promise.all([
       this.prisma.user.groupBy({ by: ['role'], _count: { id: true } }),
       this.prisma.vehicle.groupBy({ by: ['status'], _count: { id: true } }),
       this.prisma.booking.groupBy({ by: ['status'], _count: { id: true } }),
       this.prisma.booking.aggregate({
-        where: nonCancelled,
+        where: notCancelled,
         _sum: { totalAmount: true },
       }),
       this.prisma.booking.aggregate({
-        where: nonCancelled,
+        where: notCancelled,
         _sum: { platformFee: true },
       }),
       this.prisma.booking.aggregate({
-        where: { ...nonCancelled, createdAt: { gte: monthStart } },
+        where: { ...notCancelled, createdAt: { gte: monthStart } },
         _sum: { totalAmount: true },
       }),
       this.prisma.booking.aggregate({
-        where: { ...nonCancelled, createdAt: { gte: monthStart } },
+        where: { ...notCancelled, createdAt: { gte: monthStart } },
         _sum: { platformFee: true },
       }),
       this.prisma.booking.findMany({
