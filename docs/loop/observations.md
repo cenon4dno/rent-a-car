@@ -1,5 +1,27 @@
 # Observations Log
 
+## 2026-06-29 — Iteration 15 (Card Payments + Mobile KYC + npm Cleanup)
+
+**Goal:** PayMongo card payment widget, mobile expo-image-picker KYC, npm audit fix pass
+**Outcome:** Done — Milestone: payments-mobile-cleanup (commit c140ff8)
+**Findings:**
+
+- PayMongo card payments use the Payment Intents API (3 steps: create intent → tokenize card → attach method). This is separate from the Sources API used for GCash/Maya. Card details are passed from frontend → backend → PayMongo for this demo; production would use PayMongo.js for client-side tokenization.
+- `CardPaymentForm` uses controlled inputs with real-time formatting (card number groups, MM/YY expiry) and validates all fields before enabling the Confirm button via `onCardDetails(null)` when incomplete.
+- `react@18.3.2` in mobile package.json was a typo — that version doesn't exist on npm (latest React 18 is `18.3.1`). Changed to `^18.3.1`. This was blocking ALL workspace installs.
+- Root `.npmrc` with `legacy-peer-deps=true` added to allow expo-image-picker to resolve peer deps without strict version checking.
+- `expo-image-picker` installed successfully once the react version was fixed. Provides `launchImageLibraryAsync` and `launchCameraAsync` with permissions handling.
+- Mobile KYC screen (`/profile/kyc`) supports both camera capture and library picker. Upload uses `FormData` with the `{ uri, name, type }` react-native format.
+- npm audit: 48 vulnerabilities remain (all in Expo SDK transitive deps — expo-splash-screen, @expo/prebuild-config). Cannot be fixed without major Expo SDK version upgrade. Documented; acceptable for dev.
+
+**Next Actions:** (no new critical P1-P3 items remain)
+
+- Consider running `prisma migrate deploy` + seeding KB on CI/CD deploy step
+- Add ANTHROPIC_API_KEY to deployment env vars for chatbot
+- Add AZURE_STORAGE_ACCOUNT + AZURE_STORAGE_SAS_TOKEN + AZURE_STORAGE_CONTAINER to deployment env
+
+---
+
 ## 2026-06-29 — Iteration 14 (AI Chatbot with RAG Pipeline)
 
 **Goal:** AI Chatbot with RAG pipeline — booking status, car availability, rental policy Q&A

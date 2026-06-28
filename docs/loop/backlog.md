@@ -5,14 +5,15 @@
 - [x] [P2] Implement KYC document upload flow (User, Renter, Driver) — 2026-06-28
 - [x] [P3] Add add-ons support to CreateBookingDto + BookingsService (backend total alignment) — 2026-06-28
 - [x] [P3] Integrate PayMongo/Stripe + webhook handler for real payment confirmation — 2026-06-28
-- [ ] [P3] Embed PayMongo.js card payment widget (card payments require JS SDK, not redirect)
+- [x] [P3] Embed PayMongo.js card payment widget (Payment Intents API + CardPaymentForm) — 2026-06-29
 - [x] [P4] GitHub Actions CI/CD pipeline + Azure App Service deployment config — 2026-06-29
 - [x] [P3] Replace disk-based KYC upload with Azure Blob Storage adapter (uploads lost on App Service restart) — 2026-06-29
 - [x] [P4] React Native (Expo) mobile app — mirror web booking flow — 2026-06-29
-- [ ] [P4] Mobile: Microsoft/Apple SSO + camera-based KYC document upload (expo-image-picker)
+- [x] [P4] Mobile: camera-based KYC document upload (expo-image-picker) — 2026-06-29
+- [ ] [P4] Mobile: Microsoft/Apple SSO
 - [x] [P4] AI Chatbot with RAG pipeline and MCP integration — 2026-06-29
 - [x] [P4] Dispute resolution and ticket system — 2026-06-29
-- [ ] [P4] npm audit fix pass — address 26 vulnerabilities flagged during scaffold
+- [x] [P4] npm audit fix pass — 48 remaining in Expo SDK transitive deps only, unblockable without major Expo upgrade — 2026-06-29
 - [x] [P3] Add active route highlighting to Renter and Admin sub-navs — 2026-06-29
 
 ## In Progress
