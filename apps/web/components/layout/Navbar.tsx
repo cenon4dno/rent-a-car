@@ -58,7 +58,13 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <div className="flex items-center gap-3">
-                <Link href="/dashboard" className="text-sm text-gray-700 hover:text-blue-600">
+                <Link
+                  href="/bookings"
+                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  My Bookings
+                </Link>
+                <Link href="/profile" className="text-sm text-gray-700 hover:text-blue-600">
                   {session.user?.name?.split(' ')[0]}
                 </Link>
                 <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: '/' })}>
@@ -120,11 +126,20 @@ export function Navbar() {
             <Link href="/partners" className="block text-sm text-gray-700 hover:text-blue-600 py-1">
               Partners
             </Link>
-            <div className="pt-2 flex gap-2">
+            <div className="pt-2 flex flex-col gap-2">
               {session ? (
-                <Button variant="secondary" size="sm" onClick={() => signOut({ callbackUrl: '/' })}>
-                  Sign out
-                </Button>
+                <>
+                  <Link href="/bookings" className="text-sm text-gray-700 hover:text-blue-600 py-1">
+                    My Bookings
+                  </Link>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                  >
+                    Sign out
+                  </Button>
+                </>
               ) : (
                 <Link href="/login">
                   <Button size="sm" className="w-full">

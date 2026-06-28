@@ -64,6 +64,38 @@ export async function getVehicle(id: string) {
   return apiFetch<ApiResponse<VehicleDetail>>(`/vehicles/${id}`);
 }
 
+export interface BookingVehicle {
+  make: string;
+  model: string;
+  year: number;
+  plateNumber: string;
+  imageUrls: string;
+}
+
+export interface BookingPayment {
+  status: string;
+  provider: string;
+  paidAt?: string | null;
+}
+
+export interface BookingDetail {
+  id: string;
+  vehicleId: string;
+  pickupLocation: string;
+  startDate: string;
+  endDate: string;
+  dailyRate: number;
+  totalAmount: number;
+  platformFee: number;
+  platformFeeRate: number;
+  status: string;
+  createdAt: string;
+  vehicle: BookingVehicle;
+  renter?: { companyName: string };
+  driver?: { user?: { name?: string }; licenseNumber?: string } | null;
+  payment?: BookingPayment | null;
+}
+
 export async function createBooking(
   body: {
     vehicleId: string;
@@ -74,13 +106,43 @@ export async function createBooking(
   },
   token: string,
 ) {
-  return apiFetch(`/bookings`, {
+  return apiFetch<ApiResponse<BookingDetail>>(`/bookings`, {
     method: 'POST',
     body: JSON.stringify(body),
     headers: { Authorization: `Bearer ${token}` },
   });
 }
 
+export async function getBooking(id: string, token: string) {
+  return apiFetch<ApiResponse<BookingDetail>>(`/bookings/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
 export async function getMyBookings(token: string) {
-  return apiFetch(`/bookings`, { headers: { Authorization: `Bearer ${token}` } });
+  return apiFetch<ApiResponse<BookingDetail[]>>(`/bookings`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+export async function createPayment(
+  bookingId: string,
+  provider: string,
+  providerRef: string,
+  token: string,
+) {
+  return apiFetch<ApiResponse<{ id: string; status: string }>>(`/payments/${bookingId}`, {
+    method: 'POST',
+    body: JSON.stringify({ provider, providerRef }),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function confirmPayment(bookingId: string, token: string) {
+  return apiFetch<ApiResponse<{ status: string }>>(`/payments/${bookingId}/confirm`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }
