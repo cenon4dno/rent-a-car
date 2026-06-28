@@ -355,6 +355,20 @@ export async function uploadDocument(
   return res.json() as Promise<{ data: { fileUrl: string } }>;
 }
 
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+
+export async function sendChatMessage(
+  message: string,
+  token?: string,
+): Promise<{ data: { reply: string } }> {
+  const path = token ? '/chat/auth' : '/chat';
+  return apiFetch<{ data: { reply: string } }>(path, {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+}
+
 // ─── Disputes ─────────────────────────────────────────────────────────────────
 
 export interface Dispute {

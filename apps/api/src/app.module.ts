@@ -10,6 +10,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { AdminModule } from './admin/admin.module';
 import { DisputesModule } from './disputes/disputes.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DisputesModule } from './disputes/disputes.module';
     ReviewsModule,
     AdminModule,
     DisputesModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

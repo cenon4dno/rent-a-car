@@ -1,5 +1,30 @@
 # Observations Log
 
+## 2026-06-29 — Iteration 13 (Storage Adapter + Disputes + Active Sub-Nav)
+
+**Goal:** Azure Blob Storage adapter for KYC uploads, DisputesModule, active route highlighting in sub-navs
+**Outcome:** Done — Milestone: storage-ux (commit 98ae309)
+**Findings:**
+
+- `@azure/storage-blob` npm install blocked by `react@18.3.2` exact pin in `apps/mobile/package.json` creating workspace peer dep conflicts. Resolved by implementing `AzureBlobProvider` using the Azure Blob Storage REST API with native `fetch` — no SDK required. PUT request to `https://{account}.blob.core.windows.net/{container}/{blob}?{sasToken}`.
+- `Buffer` is not directly assignable to `BodyInit` in the TypeScript types for `fetch` — wrapped with `buffer as any` since Node.js fetch runtime can handle Buffer natively.
+- `IStorageProvider` interface with `upload(buffer, filename, mimeType): Promise<string>` is the abstraction boundary. Factory in `StorageModule` selects `LocalDiskProvider` if `AZURE_STORAGE_ACCOUNT` env is not set, else `AzureBlobProvider`.
+- Switching `UsersController` from `diskStorage` to `memoryStorage` multer + delegating to `IStorageProvider` means uploads now work on Azure App Service (no persistent local disk).
+- `DisputesModule` adds `POST /disputes`, `GET /disputes` (ADMIN-only), `GET /disputes/:id`, `PATCH /disputes/:id/resolve`. The `Dispute` Prisma model was already in the schema — no migration needed.
+- `ActiveNavLink` is a `'use client'` component that reads `usePathname()` and applies `bg-blue-50 text-blue-600` when the path matches. It supports an `exact` flag to avoid `/renter` matching `/renter/fleet`.
+- Server component layouts can import client components directly — Next.js handles the boundary automatically. No need to extract the nav into a separate layout file.
+- `DisputeForm` is shown only for CONFIRMED, ACTIVE, and COMPLETED bookings — not for PENDING or CANCELLED. Submitted disputes show a green confirmation banner; the form collapses after submit.
+- Admin `/admin/disputes` page shows all disputes in a table with booking reference, description, status badge, and resolution text. Linked in the admin sub-nav.
+
+**Next Actions:** (added to backlog)
+
+- Embed PayMongo.js card payment widget (P3)
+- Mobile: Microsoft/Apple SSO + expo-image-picker KYC (P4)
+- AI Chatbot with RAG pipeline and MCP integration (P4)
+- npm audit fix pass (P4)
+
+---
+
 ## 2026-06-28 — Iteration 0 (Initialization)
 
 **Goal:** Set up loop architecture and seed project state files
