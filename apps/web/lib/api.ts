@@ -149,6 +149,18 @@ export async function confirmPayment(bookingId: string, token: string) {
   });
 }
 
+export async function initiatePayment(
+  bookingId: string,
+  paymentMethod: string,
+  token: string,
+): Promise<ApiResponse<{ checkoutUrl: string | null; directConfirm: boolean; bookingId: string }>> {
+  return apiFetch(`/payments/${bookingId}/initiate`, {
+    method: 'POST',
+    body: JSON.stringify({ paymentMethod }),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // ─── Booking actions ──────────────────────────────────────────────────────────
 
 function bookingAction(id: string, action: string, token: string) {

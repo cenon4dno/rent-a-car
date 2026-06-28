@@ -13,7 +13,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UsersService, DocumentType } from './users.service';
 
 const VALID_DOC_TYPES: DocumentType[] = ['license', 'secondaryId', 'businessPermit', 'companyReg'];

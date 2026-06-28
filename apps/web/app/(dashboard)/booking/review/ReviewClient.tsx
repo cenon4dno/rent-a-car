@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { createBooking, createPayment, confirmPayment } from '@/lib/api';
+import { createBooking, initiatePayment } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 
@@ -82,12 +82,14 @@ export function ReviewClient({
       );
 
       const bookingId = bookingRes.data.id;
-      const providerRef = `STUB-${Date.now()}`;
+      const paymentRes = await initiatePayment(bookingId, paymentMethod, session.apiToken);
+      const { checkoutUrl } = paymentRes.data;
 
-      await createPayment(bookingId, paymentMethod, providerRef, session.apiToken);
-      await confirmPayment(bookingId, session.apiToken);
-
-      router.push(`/booking/${bookingId}`);
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        router.push(`/booking/${bookingId}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Booking failed. Please try again.');
       setLoading(false);

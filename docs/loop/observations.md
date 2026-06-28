@@ -142,6 +142,29 @@
 
 ---
 
+## 2026-06-28 — Iteration 10 (Payment Provider Integration)
+
+**Goal:** Replace hard-coded stub with a real payment provider abstraction (IPaymentProvider); add PayMongo adapter and webhook handler
+**Outcome:** Done — Milestone: payments
+**Findings:**
+
+- `IPaymentProvider` interface with `createIntent()`, `verifyWebhookSignature()`, `extractBookingIdFromWebhook()`, `isSuccessEvent()` cleanly separates the payment flow from provider details.
+- `StubPaymentProvider` returns `directConfirm: true` and `checkoutUrl: null` — the flow immediately confirms the payment and navigates to the booking confirmation page. No change to user-visible behavior in dev.
+- `PaymongoPaymentProvider` uses `POST /v1/sources` (e-wallet flow: GCash, Maya). Card payments via PayMongo require embedded JS (PayMongo.js) — deferred to a future iteration.
+- NestJS `rawBody: true` factory option is required for the webhook endpoint to access the raw request body for HMAC verification. Without it, `req.rawBody` is undefined.
+- `PaymentsModule` provider factory reads `PAYMONGO_SECRET_KEY` at startup — stub if blank, PayMongo if set. No code changes needed to switch modes.
+- `POST /payments/:bookingId/initiate` is the new canonical payment entry point. The legacy `POST /payments/:bookingId` endpoint is kept for backward compat.
+- Frontend `ReviewClient` now calls `initiatePayment()`; if `checkoutUrl` is non-null it redirects via `window.location.href` (works for e-wallet redirect flow); if null (stub), navigates via Next.js router.
+- PayMongo amounts are in centavos (`amount * 100`) — easy to miss; documented in the provider code.
+- `PAYMONGO_SECRET_KEY` and `PAYMONGO_WEBHOOK_SECRET` added to `.env.example`.
+
+**Next Actions:** (added to backlog)
+
+- Embed PayMongo.js card payment widget on the review page (P3)
+- GitHub Actions CI/CD pipeline + Azure App Service deployment config (P4)
+
+---
+
 ## 2026-06-28 — Iteration 9 (Add-ons Alignment + KYC Document Upload)
 
 **Goal:** Wire backend add-ons into booking total; KYC document upload flow for users and renters
