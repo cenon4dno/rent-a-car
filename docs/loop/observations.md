@@ -78,3 +78,23 @@
 - Build vehicle search/results page (P3)
 - Fix `status as any` cast in BookingsService with explicit enum (minor cleanup)
 - Add PayMongo/Stripe webhook handler to PaymentsModule (P3)
+
+---
+
+## 2026-06-28 — Iteration 4 (Home Page UI)
+
+**Goal:** Next.js home page: hero, featured vehicles, top partners, how-it-works, CTA sections
+**Outcome:** Done — pushed as `Milestone: home-page` (commit a959d0a)
+**Findings:**
+
+- `SearchWidget` uses `useSearchParams()` so it must be wrapped in a `Suspense` boundary — Next.js 15 enforces this strictly.
+- `VehicleCard` and `PartnerCard` are purely presentational; they accept no async data, which keeps the home page fully static (no API needed to render the shell).
+- `lib/api.ts` already has `searchVehicles`, `getVehicle`, and `createBooking` typed wrappers ready for the search and detail pages.
+- `FilterSidebar` and `Pagination` were started (untracked) at the end of this iteration — ready for the search page.
+- `BookingsService` status-as-any cast was fixed with an explicit `BookingStatus` enum import.
+- Lint-staged passed on all changed files.
+
+**Next Actions:** (carried into Iteration 5)
+
+- Build vehicle search/results page `/search` with FilterSidebar + grid + Pagination (P3)
+- Build vehicle detail page `/vehicle/[id]` with BookingForm (P3)

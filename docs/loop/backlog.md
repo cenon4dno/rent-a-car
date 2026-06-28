@@ -3,13 +3,12 @@
 ## Active
 
 - [ ] [P2] Implement KYC document upload flow (User, Renter, Driver) with file storage abstraction
-- [ ] [P3] Build Next.js home page: hero search widget, featured vehicles section, top partners carousel
-- [ ] [P3] Build vehicle search and results page with filters
-- [ ] [P3] Build booking flow: selection → review → payment → confirmation pages
+- [ ] [P3] Build vehicle search and results page (`/search`) with filters sidebar + grid/list toggle
+- [ ] [P3] Build vehicle detail page (`/vehicle/[id]`) with booking form
+- [ ] [P3] Build booking flow: review → payment → confirmation (QR code) pages
 - [ ] [P3] Integrate PayMongo/Stripe + webhook handler for payment confirmation
 - [ ] [P3] Admin dashboard: user management, platform BI, commission config
 - [ ] [P3] Renter dashboard: fleet management, booking management, revenue BI
-- [ ] [P3] Fix `status as any` cast in BookingsService — use explicit BookingStatus enum
 - [ ] [P4] React Native (Expo) mobile app — mirror web booking flow
 - [ ] [P4] AI Chatbot with RAG pipeline and MCP integration
 - [ ] [P4] Dispute resolution and ticket system
@@ -35,3 +34,8 @@ _(none)_
 - [x] [P2] Scaffold NestJS PaymentsModule (create, confirm, refund stubs) — 2026-06-28
 - [x] [P2] Scaffold NestJS ReviewsModule (post review, avg rating by vehicle/renter) — 2026-06-28
 - [x] [P2] RolesGuard + @Roles() decorator — 2026-06-28
+- [x] [P3] Build home page: hero, how-it-works, featured vehicles, top partners, CTA — 2026-06-28
+- [x] [P3] Shared UI atoms: Button, Badge, VehicleCard, PartnerCard, SearchWidget — 2026-06-28
+- [x] [P3] Layout components: Navbar (auth-aware, responsive), Footer — 2026-06-28
+- [x] [P3] lib/api.ts typed fetch helpers — 2026-06-28
+- [x] [P3] Fix BookingsService status-as-any with BookingStatus enum — 2026-06-28
