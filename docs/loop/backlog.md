@@ -12,7 +12,7 @@
 - [x] [P4] Mobile: camera-based KYC document upload (expo-image-picker) — 2026-06-29
 - [x] [P3] Fix GitHub Actions CI — prisma generate, shared build, TS errors — 2026-06-29
 - [ ] [P4] Configure Azure GitHub secrets to enable Deploy workflow (DATABASE_URL, publish profiles)
-- [ ] [P4] Mobile: Microsoft/Apple SSO
+- [x] [P4] Mobile: Microsoft/Apple SSO — 2026-06-29
 - [x] [P4] AI Chatbot with RAG pipeline and MCP integration — 2026-06-29
 - [x] [P4] Dispute resolution and ticket system — 2026-06-29
 - [x] [P4] npm audit fix pass — 48 remaining in Expo SDK transitive deps only, unblockable without major Expo upgrade — 2026-06-29

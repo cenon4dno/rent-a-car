@@ -1,5 +1,22 @@
 # Observations Log
 
+## 2026-06-29 — Iteration 17 (Mobile SSO + Missing Package Fixes)
+
+**Goal:** Add Microsoft and Apple SSO to mobile app; add missing expo packages to package.json
+**Outcome:** Done — Milestone: mobile-sso (commit 26621ff)
+**Findings:**
+
+- `expo-image-picker` was used in `kyc.tsx` but was never added to `apps/mobile/package.json`. Added along with `expo-apple-authentication`.
+- Microsoft SSO uses `useAutoDiscovery` from `expo-auth-session` pointed at the Azure AD v2.0 OIDC endpoint, then calls `graph.microsoft.com/v1.0/me` for user info.
+- Apple Sign In uses `expo-apple-authentication` native iOS SDK. Apple only returns `email` on the first sign-in — subsequent logins use a private relay address. Handled by falling back to `${user}@privaterelay.appleid.com`.
+- Apple Sign In button is conditionally rendered (`Platform.OS === 'ios'`) since it's iOS-only.
+- `ERR_REQUEST_CANCELED` from Apple auth is not an error — it means user cancelled. Must check this code before showing an alert.
+- All P1–P4 backlog items are now complete. Only deployment configuration (Azure secrets) remains as a user-action item.
+
+**Next Actions:**
+
+- Configure GitHub Actions secrets for Azure deployment (user action required — cannot be automated)
+
 ## 2026-06-29 — Iteration 16 (CI Stabilization)
 
 **Goal:** Get GitHub Actions CI passing on main branch after multiple cascading failures
