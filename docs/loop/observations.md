@@ -1,5 +1,28 @@
 # Observations Log
 
+## 2026-06-29 — Iteration 14 (AI Chatbot with RAG Pipeline)
+
+**Goal:** AI Chatbot with RAG pipeline — booking status, car availability, rental policy Q&A
+**Outcome:** Done — Milestone: ai-chatbot (commit 700f6ae)
+**Findings:**
+
+- `KnowledgeBase` Prisma model stores category, question, answer, and keywords for each entry. 19 FAQ entries seeded covering booking, payment, KYC, vehicles, disputes, and account topics.
+- RAG pipeline uses keyword-based scoring (tokenize query → score against KB entry text+keywords → top-4 entries) rather than vector embeddings — no extra infra needed. Accuracy is acceptable for structured FAQ content.
+- `ChatModule` has two endpoints: `POST /chat` (public, no auth) and `POST /chat/auth` (JwtAuthGuard, injects personalized user context — active booking, KYC status — into the prompt).
+- Claude API call uses `claude-haiku-4-5-20251001` with a system prompt that injects KB context. Model ID must be exact — using the wrong format causes an API error.
+- Graceful fallback: if `ANTHROPIC_API_KEY` is not set, the service returns the first matching KB answer directly without calling Claude. This lets the chatbot work in dev without an API key.
+- `ChatWidget` is a floating button mounted in the root layout — visible on every page, works for both authenticated and unauthenticated users (uses `/chat/auth` if session present, `/chat` otherwise).
+- `Booking.customerId` relation: bookings belong to `CustomerProfile`, not directly to `User`. The `getUserContext` method must look up via `customerProfile.id`, not `user.id`.
+- The `@Optional()` NestJS decorator doesn't suppress guards on a route — two separate endpoints (`/chat` and `/chat/auth`) is cleaner than trying to make auth optional.
+
+**Next Actions:** (added to backlog)
+
+- PayMongo.js card payment widget (P3)
+- Mobile: Microsoft/Apple SSO + expo-image-picker KYC (P4)
+- npm audit fix pass (P4)
+
+---
+
 ## 2026-06-29 — Iteration 13 (Storage Adapter + Disputes + Active Sub-Nav)
 
 **Goal:** Azure Blob Storage adapter for KYC uploads, DisputesModule, active route highlighting in sub-navs

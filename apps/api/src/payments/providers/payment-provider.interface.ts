@@ -4,6 +4,14 @@ export interface PaymentIntent {
   directConfirm: boolean;
 }
 
+export interface CardDetails {
+  cardNumber: string;
+  expMonth: number;
+  expYear: number;
+  cvc: string;
+  cardHolder: string;
+}
+
 export interface IPaymentProvider {
   createIntent(params: {
     bookingId: string;
@@ -12,6 +20,7 @@ export interface IPaymentProvider {
     paymentMethod: string;
     successUrl: string;
     failedUrl: string;
+    cardDetails?: CardDetails;
   }): Promise<PaymentIntent>;
 
   verifyWebhookSignature(rawBody: string, signature: string): boolean;

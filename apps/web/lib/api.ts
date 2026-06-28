@@ -149,14 +149,23 @@ export async function confirmPayment(bookingId: string, token: string) {
   });
 }
 
+export interface CardDetails {
+  cardNumber: string;
+  expMonth: number;
+  expYear: number;
+  cvc: string;
+  cardHolder: string;
+}
+
 export async function initiatePayment(
   bookingId: string,
   paymentMethod: string,
   token: string,
+  cardDetails?: CardDetails,
 ): Promise<ApiResponse<{ checkoutUrl: string | null; directConfirm: boolean; bookingId: string }>> {
   return apiFetch(`/payments/${bookingId}/initiate`, {
     method: 'POST',
-    body: JSON.stringify({ paymentMethod }),
+    body: JSON.stringify({ paymentMethod, cardDetails }),
     headers: { Authorization: `Bearer ${token}` },
   });
 }

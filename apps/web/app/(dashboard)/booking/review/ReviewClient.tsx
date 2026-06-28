@@ -3,9 +3,10 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { createBooking, initiatePayment } from '@/lib/api';
+import { createBooking, initiatePayment, CardDetails } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { CardPaymentForm } from './CardPaymentForm';
 
 const ADDON_LABELS: Record<string, { label: string; pricePerDay: number }> = {
   childSeat: { label: 'Child Seat', pricePerDay: 500 },
@@ -46,6 +47,7 @@ export function ReviewClient({
   const { data: session } = useSession();
 
   const [paymentMethod, setPaymentMethod] = useState<string>('card');
+  const [cardDetails, setCardDetails] = useState<CardDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,7 +84,12 @@ export function ReviewClient({
       );
 
       const bookingId = bookingRes.data.id;
-      const paymentRes = await initiatePayment(bookingId, paymentMethod, session.apiToken);
+      const paymentRes = await initiatePayment(
+        bookingId,
+        paymentMethod,
+        session.apiToken,
+        paymentMethod === 'card' && cardDetails ? cardDetails : undefined,
+      );
       const { checkoutUrl } = paymentRes.data;
 
       if (checkoutUrl) {
@@ -195,6 +202,7 @@ export function ReviewClient({
             </label>
           ))}
         </div>
+        {paymentMethod === 'card' && <CardPaymentForm onCardDetails={setCardDetails} />}
       </section>
 
       {/* Error */}
@@ -208,7 +216,7 @@ export function ReviewClient({
       <Button
         onClick={handleConfirm}
         loading={loading}
-        disabled={loading}
+        disabled={loading || (paymentMethod === 'card' && !cardDetails)}
         className="w-full"
         size="lg"
       >

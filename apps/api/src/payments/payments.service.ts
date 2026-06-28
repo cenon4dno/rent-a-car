@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { IPaymentProvider } from './providers/payment-provider.interface';
+import { IPaymentProvider, CardDetails } from './providers/payment-provider.interface';
 
 export const PAYMENT_PROVIDER = 'PAYMENT_PROVIDER';
 
@@ -21,7 +21,12 @@ export class PaymentsService {
     @Inject(PAYMENT_PROVIDER) private readonly provider: IPaymentProvider,
   ) {}
 
-  async initiatePayment(bookingId: string, paymentMethod: string, baseUrl: string) {
+  async initiatePayment(
+    bookingId: string,
+    paymentMethod: string,
+    baseUrl: string,
+    cardDetails?: CardDetails,
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: { payment: true },
@@ -36,6 +41,7 @@ export class PaymentsService {
       paymentMethod,
       successUrl: `${baseUrl}/booking/${bookingId}`,
       failedUrl: `${baseUrl}/booking/review?error=payment_failed`,
+      cardDetails,
     });
 
     await this.prisma.$transaction([

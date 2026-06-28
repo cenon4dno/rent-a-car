@@ -118,3 +118,25 @@ export function initiatePayment(bookingId: string, paymentMethod: string, token:
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export async function uploadDocumentMobile(
+  type: string,
+  uri: string,
+  fileName: string,
+  mimeType: string,
+  token: string,
+): Promise<ApiResponse<{ fileUrl: string }>> {
+  const form = new FormData();
+  form.append('file', { uri, name: fileName, type: mimeType } as unknown as Blob);
+
+  const res = await fetch(`${API_BASE}/users/documents/${type}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { message?: string };
+    throw new Error(err.message ?? 'Upload failed');
+  }
+  return res.json() as Promise<ApiResponse<{ fileUrl: string }>>;
+}

@@ -81,13 +81,7 @@ export default function ProfileScreen() {
             emoji="📋"
             onPress={() => router.push('/(tabs)/bookings')}
           />
-          <MenuItem
-            label="KYC Documents"
-            emoji="📄"
-            onPress={() =>
-              Alert.alert('KYC', 'Use the web app at rentacar.app/profile/kyc to upload documents')
-            }
-          />
+          <MenuItem label="KYC Documents" emoji="📄" onPress={() => router.push('/profile/kyc')} />
         </MenuSection>
 
         <MenuSection title="Settings">

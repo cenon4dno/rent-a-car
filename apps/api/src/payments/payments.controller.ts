@@ -12,11 +12,20 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, Max, IsNotEmpty } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CardDetails } from './providers/payment-provider.interface';
+
+class CardDetailsDto implements CardDetails {
+  @ApiProperty() @IsString() @IsNotEmpty() cardNumber: string;
+  @ApiProperty() @IsInt() @Min(1) @Max(12) expMonth: number;
+  @ApiProperty() @IsInt() @Min(2024) @Max(2099) expYear: number;
+  @ApiProperty() @IsString() @IsNotEmpty() cvc: string;
+  @ApiProperty() @IsString() @IsNotEmpty() cardHolder: string;
+}
 
 class InitiatePaymentDto {
   @ApiProperty({ description: 'Payment method: card | gcash | maya' })
@@ -27,6 +36,10 @@ class InitiatePaymentDto {
   @IsOptional()
   @IsString()
   baseUrl?: string;
+
+  @ApiPropertyOptional({ type: CardDetailsDto })
+  @IsOptional()
+  cardDetails?: CardDetailsDto;
 }
 
 @ApiTags('payments')
@@ -44,7 +57,12 @@ export class PaymentsController {
     @Req() req: Request,
   ) {
     const baseUrl = dto.baseUrl ?? `${req.protocol}://${req.get('host')}`.replace('/api/v1', '');
-    return this.paymentsService.initiatePayment(bookingId, dto.paymentMethod, baseUrl);
+    return this.paymentsService.initiatePayment(
+      bookingId,
+      dto.paymentMethod,
+      baseUrl,
+      dto.cardDetails,
+    );
   }
 
   @Post('webhook')
