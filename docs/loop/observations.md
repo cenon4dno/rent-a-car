@@ -142,6 +142,31 @@
 
 ---
 
+## 2026-06-29 — Iteration 12 (React Native Mobile App)
+
+**Goal:** Expo React Native app with NativeWind — core booking flow mirroring the web app
+**Outcome:** Done — Milestone: mobile-app
+**Findings:**
+
+- Expo 52 + Expo Router 4 (file-based routing) mirrors Next.js App Router conventions — same mental model, `app/` directory with `_layout.tsx` files.
+- NativeWind 4 requires `babel-preset-expo` with `jsxImportSource: 'nativewind'`, the `nativewind/babel` plugin, and `withNativeWind` in `metro.config.js`. All three are needed.
+- `expo-secure-store` handles persistent auth token storage on device — more secure than AsyncStorage for JWT tokens.
+- Auth flow: Google SSO via `expo-auth-session` → get access token → fetch Google user info → POST `/auth/sso` → receive our API JWT → store in SecureStore. Same `/auth/sso` endpoint as the web.
+- `useFocusEffect` + `useCallback` is the correct pattern for refreshing data when navigating back to a tab screen — `useEffect` alone doesn't re-fire on tab refocus.
+- Expo Router `useLocalSearchParams` replaces Next.js `useSearchParams` — same concept, different import.
+- Vehicle detail screen uses `require('react-native')` inside a nested component — this is a workaround for TypeScript circular reference avoidance; cleaner to import at top level (refactor later).
+- KYC document uploads on mobile point users to the web app (`rentacar.app/profile/kyc`) — mobile camera-based document upload is a future enhancement.
+- Microsoft and Apple SSO buttons show "coming soon" alert — `expo-auth-session` supports both, but requires additional OAuth app configuration in Azure AD and Apple Developer portal.
+- NativeWind `gap-*` utilities work on React Native with `flex-row` but require wrapping `View` to have `flexWrap: wrap` for multi-row layouts.
+
+**Next Actions:** (added to backlog)
+
+- AI Chatbot with RAG pipeline and MCP integration (P4)
+- Mobile: Microsoft/Apple SSO for login screen (P4)
+- Mobile: camera-based KYC document upload via expo-image-picker (P4)
+
+---
+
 ## 2026-06-29 — Iteration 11 (CI/CD + Deployment Config)
 
 **Goal:** GitHub Actions CI/CD pipeline, Azure App Service deployment, Nginx reverse proxy config
