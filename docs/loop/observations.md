@@ -98,3 +98,25 @@
 
 - Build vehicle search/results page `/search` with FilterSidebar + grid + Pagination (P3)
 - Build vehicle detail page `/vehicle/[id]` with BookingForm (P3)
+
+---
+
+## 2026-06-28 — Iteration 5 (Search + Vehicle Detail Pages)
+
+**Goal:** `/search` results page + `/vehicle/[id]` detail page with live booking form
+**Outcome:** Done — pushed as `Milestone: search-and-detail` (commit 6555524)
+**Findings:**
+
+- Next.js 15 `searchParams` and `params` in page components are now Promises — must `await` them before reading values. The `async function Page({ searchParams }: { searchParams: Promise<...> })` pattern is required.
+- `force-dynamic` export is needed on the search page so each request re-reads URL params (otherwise Next.js statically renders the page at build time with empty params).
+- `imageUrls` is stored in the DB as a JSON string — parsing must be wrapped in try/catch since the value could be malformed.
+- `FilterSidebar` and `Pagination` use `useSearchParams()` and must each be wrapped in a `<Suspense>` boundary when composed inside a Server Component.
+- Ternary-as-statement (`condition ? a() : b()`) is flagged by `@typescript-eslint/no-unused-expressions` — use `if/else` instead.
+- `BookingForm` correctly computes platform fee (5%) and guards the "Proceed to Review" button: unauthenticated users are redirected to `/login?callbackUrl=...`; authenticated users go to `/booking/review` with query params.
+- Husky + lint-staged (ESLint + Prettier) passed on all 11 changed files after fixing the ternary.
+
+**Next Actions:** (added to backlog)
+
+- Build booking review page `/booking/review` — show full price breakdown, confirm details (P3)
+- Build payment page `/booking/payment` — Stripe/PayMongo checkout integration (P3)
+- Build booking confirmation page `/booking/[id]` — QR code, reference number, pickup details (P3)

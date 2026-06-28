@@ -3,9 +3,9 @@
 ## Active
 
 - [ ] [P2] Implement KYC document upload flow (User, Renter, Driver) with file storage abstraction
-- [ ] [P3] Build vehicle search and results page (`/search`) with filters sidebar + grid/list toggle
-- [ ] [P3] Build vehicle detail page (`/vehicle/[id]`) with booking form
-- [ ] [P3] Build booking flow: review → payment → confirmation (QR code) pages
+- [ ] [P3] Build booking review page `/booking/review` — price breakdown + confirm details
+- [ ] [P3] Build payment page `/booking/payment` — Stripe/PayMongo checkout integration
+- [ ] [P3] Build booking confirmation page `/booking/[id]` — QR code, reference number, pickup map
 - [ ] [P3] Integrate PayMongo/Stripe + webhook handler for payment confirmation
 - [ ] [P3] Admin dashboard: user management, platform BI, commission config
 - [ ] [P3] Renter dashboard: fleet management, booking management, revenue BI
@@ -39,3 +39,5 @@ _(none)_
 - [x] [P3] Layout components: Navbar (auth-aware, responsive), Footer — 2026-06-28
 - [x] [P3] lib/api.ts typed fetch helpers — 2026-06-28
 - [x] [P3] Fix BookingsService status-as-any with BookingStatus enum — 2026-06-28
+- [x] [P3] Build vehicle search and results page (`/search`) with filters sidebar + grid — 2026-06-28
+- [x] [P3] Build vehicle detail page (`/vehicle/[id]`) with live booking form — 2026-06-28
