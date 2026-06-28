@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 
@@ -111,18 +112,18 @@ export class BookingsService {
   }
 
   async confirm(id: string, renterId: string) {
-    return this.updateStatus(id, 'CONFIRMED', renterId, 'RENTER');
+    return this.updateStatus(id, BookingStatus.CONFIRMED, renterId, 'RENTER');
   }
 
   async cancel(id: string, userId: string, role: string) {
-    return this.updateStatus(id, 'CANCELLED', userId, role);
+    return this.updateStatus(id, BookingStatus.CANCELLED, userId, role);
   }
 
   async complete(id: string, renterId: string) {
-    return this.updateStatus(id, 'COMPLETED', renterId, 'RENTER');
+    return this.updateStatus(id, BookingStatus.COMPLETED, renterId, 'RENTER');
   }
 
-  private async updateStatus(id: string, status: string, userId: string, role: string) {
+  private async updateStatus(id: string, status: BookingStatus, userId: string, role: string) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: { renter: true, customer: true },
@@ -132,6 +133,6 @@ export class BookingsService {
     if (role === 'RENTER' && booking.renter.userId !== userId) throw new ForbiddenException();
     if (role === 'CUSTOMER' && booking.customer.userId !== userId) throw new ForbiddenException();
 
-    return this.prisma.booking.update({ where: { id }, data: { status: status as any } });
+    return this.prisma.booking.update({ where: { id }, data: { status } });
   }
 }
