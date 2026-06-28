@@ -58,6 +58,14 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <div className="flex items-center gap-3">
+                {(session.user as { role?: string })?.role === 'ADMIN' && (
+                  <Link
+                    href="/admin"
+                    className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    Admin
+                  </Link>
+                )}
                 {(session.user as { role?: string })?.role === 'RENTER' && (
                   <Link
                     href="/renter"
@@ -137,6 +145,16 @@ export function Navbar() {
             <div className="pt-2 flex flex-col gap-2">
               {session ? (
                 <>
+                  {(session.user as { role?: string })?.role === 'ADMIN' && (
+                    <Link href="/admin" className="text-sm text-gray-700 hover:text-blue-600 py-1">
+                      Admin
+                    </Link>
+                  )}
+                  {(session.user as { role?: string })?.role === 'RENTER' && (
+                    <Link href="/renter" className="text-sm text-gray-700 hover:text-blue-600 py-1">
+                      Dashboard
+                    </Link>
+                  )}
                   <Link href="/bookings" className="text-sm text-gray-700 hover:text-blue-600 py-1">
                     My Bookings
                   </Link>

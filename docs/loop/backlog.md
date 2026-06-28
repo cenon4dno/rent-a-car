@@ -3,23 +3,14 @@
 ## Active
 
 - [ ] [P2] Implement KYC document upload flow (User, Renter, Driver) with file storage abstraction
-- [ ] [P3] Build Renter Dashboard: fleet CRUD, booking management, revenue BI charts
-- [ ] [P3] Build Admin Dashboard: user management, platform BI, commission config
 - [ ] [P3] Add add-ons support to CreateBookingDto + BookingsService (backend total alignment)
 - [ ] [P3] Integrate PayMongo/Stripe + webhook handler for real payment confirmation
 - [ ] [P4] GitHub Actions CI/CD pipeline + Azure App Service deployment config
 - [ ] [P4] React Native (Expo) mobile app — mirror web booking flow
 - [ ] [P4] AI Chatbot with RAG pipeline and MCP integration
 - [ ] [P4] Dispute resolution and ticket system
-- [ ] [P4] npm audit fix pass — address 26 vulnerabilities
-- [ ] [P3] Integrate PayMongo/Stripe + webhook handler for payment confirmation
-- [ ] [P3] Admin dashboard: user management, platform BI, commission config
-- [ ] [P3] Renter dashboard: fleet management, booking management, revenue BI
-- [ ] [P4] React Native (Expo) mobile app — mirror web booking flow
-- [ ] [P4] AI Chatbot with RAG pipeline and MCP integration
-- [ ] [P4] Dispute resolution and ticket system
-- [ ] [P4] Azure App Service deployment + Nginx reverse proxy + GitHub Actions CI/CD
 - [ ] [P4] npm audit fix pass — address 26 vulnerabilities flagged during scaffold
+- [ ] [P3] Add active route highlighting to Renter and Admin sub-navs (minor UX)
 
 ## In Progress
 
@@ -49,3 +40,5 @@ _(none)_
 - [x] [P3] Build vehicle detail page (`/vehicle/[id]`) with live booking form — 2026-06-28
 - [x] [P3] Build booking review + confirm+pay stub + confirmation ticket pages — 2026-06-28
 - [x] [P3] Build My Bookings page (`/bookings`) with status badges — 2026-06-28
+- [x] [P3] Build Renter Dashboard: fleet CRUD, booking management, revenue BI stats — 2026-06-28
+- [x] [P3] Build Admin Dashboard: user management, platform BI, commission config — 2026-06-28

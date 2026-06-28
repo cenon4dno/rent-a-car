@@ -122,6 +122,50 @@
 
 ---
 
+## 2026-06-28 — Iteration 7 (Renter Dashboard)
+
+**Goal:** Renter Portal — fleet CRUD, booking management, revenue stats
+**Outcome:** Done — pushed as `Milestone: renter-dashboard` (commit f34d2f9)
+**Findings:**
+
+- `GET /vehicles/my` must be registered BEFORE `GET /:id` in the NestJS controller — otherwise `my` is matched as an ID parameter. This is a standard NestJS routing order requirement.
+- `await auth()` without assigning the return value still satisfies the layout guard requirement (layout already checks session before rendering children). In edit page, no session value was needed after the auth guard ran.
+- `@typescript-eslint/no-unused-vars` catches `const x = await fn()` where x is not used — use `await fn()` with no assignment.
+- `Promise.allSettled` is the correct pattern for parallel server-side data fetching when partial failure is acceptable (one endpoint down shouldn't crash the whole page).
+- The Renter layout sub-nav uses plain `Link` components without an `active` state — a future iteration should highlight the current route using `usePathname()` in a client component wrapper.
+- VehicleForm's `set()` helper simplifies controlled form state updates without verbose `onChange` handlers per field.
+
+**Next Actions:** (added to backlog)
+
+- Build Admin Dashboard: user management, platform BI, commission config (P3)
+- Add active route highlighting to Renter sub-nav (minor UX)
+
+---
+
+## 2026-06-28 — Iteration 8 (Admin Dashboard)
+
+**Goal:** Admin Portal — platform GMV/commission stats, user management + KYC, per-renter commission config
+**Outcome:** Done — Milestone: admin-dashboard
+**Findings:**
+
+- `AdminService.getStats()` uses Prisma `$transaction` with 8 parallel queries (groupBy + aggregate) — atomic read snapshot avoids inconsistent counts between queries.
+- `$transaction` with an array of promises is read-only (no writes); this is safe and avoids locking.
+- `GET /admin/stats` returns `gmv.total`, `gmv.mtd`, `commission.total`, `commission.mtd`, breakdowns by user role, vehicle status, booking status, and 10 most recent bookings.
+- `CommissionEditor` uses an inline edit pattern: display-only → edit mode → save/cancel. `value` is stored as a string percentage (e.g., "5.0") and divided by 100 before sending to the API. This avoids floating-point confusion in the input field.
+- `KycActions` dropdown is a custom popover (not a native `<select>`) — allows cleaner styling and avoids the browser default select appearance. It closes on item select.
+- Admin layout guards all `/admin/*` routes to ADMIN role via `auth()` server-side — same pattern as the Renter layout.
+- Navbar now shows role-specific links: `Admin` for ADMIN, `Dashboard` for RENTER — both desktop and mobile menus updated.
+- `getAdminStats` return type includes `recentBookings` with nested `vehicle` and `renter` — the Prisma `include` shape matches the TypeScript interface defined in `lib/api.ts`.
+
+**Next Actions:** (added to backlog)
+
+- Add `addons` field to `CreateBookingDto` + `BookingsService` so backend total matches frontend (P3)
+- Integrate PayMongo/Stripe + webhook handler for real payment confirmation (P3)
+- KYC document upload flow with file storage abstraction (P2)
+- GitHub Actions CI/CD + Azure App Service deployment config (P4)
+
+---
+
 ## 2026-06-28 — Iteration 5 (Search + Vehicle Detail Pages)
 
 **Goal:** `/search` results page + `/vehicle/[id]` detail page with live booking form

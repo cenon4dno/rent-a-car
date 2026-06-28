@@ -216,3 +216,78 @@ export async function deleteVehicle(id: string, token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+export interface AdminStats {
+  users: Record<string, number>;
+  vehicles: Record<string, number>;
+  bookings: Record<string, number>;
+  gmv: { total: number; mtd: number };
+  commission: { total: number; mtd: number };
+  recentBookings: Array<{
+    id: string;
+    status: string;
+    totalAmount: number;
+    createdAt: string;
+    vehicle: { make: string; model: string };
+    renter: { companyName: string };
+  }>;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  kycStatus: string;
+  createdAt: string;
+  renterProfile?: {
+    id: string;
+    companyName: string;
+    trustBadge: string;
+    commissionRate: number;
+  } | null;
+}
+
+export interface AdminRenter {
+  id: string;
+  companyName: string;
+  trustBadge: string;
+  commissionRate: number;
+  user: { id: string; name: string; email: string; kycStatus: string };
+}
+
+function adminFetch<T>(path: string, token: string, options?: RequestInit) {
+  return apiFetch<ApiResponse<T>>(`/admin${path}`, {
+    ...options,
+    headers: { Authorization: `Bearer ${token}`, ...options?.headers },
+    cache: 'no-store',
+  });
+}
+
+export const getAdminStats = (token: string) => adminFetch<AdminStats>('/stats', token);
+
+export const getAdminUsers = (token: string) => adminFetch<AdminUser[]>('/users', token);
+
+export const getAdminRenters = (token: string) => adminFetch<AdminRenter[]>('/renters', token);
+
+export async function updateUserKyc(userId: string, kycStatus: string, token: string) {
+  return adminFetch<AdminUser>(`/users/${userId}/kyc`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ kycStatus }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export async function updateRenterCommission(
+  renterId: string,
+  commissionRate: number,
+  token: string,
+) {
+  return adminFetch<AdminRenter>(`/renters/${renterId}/commission`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ commissionRate }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
