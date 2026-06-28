@@ -1,35 +1,38 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import { useAutoDiscovery, useAuthRequest, makeRedirectUri } from 'expo-auth-session';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { ssoExchange } from '@/lib/auth';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const MICROSOFT_CLIENT_ID = process.env.EXPO_PUBLIC_MICROSOFT_CLIENT_ID ?? '';
+const MICROSOFT_TENANT = process.env.EXPO_PUBLIC_MICROSOFT_TENANT_ID ?? 'common';
+
 export default function LoginScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<'google' | 'microsoft' | 'apple' | null>(null);
 
-  const [, , promptAsync] = Google.useAuthRequest({
+  // ── Google ──────────────────────────────────────────────────────────────────
+  const [, , promptGoogle] = Google.useAuthRequest({
     clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
   });
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
+    setLoading('google');
     try {
-      const result = await promptAsync();
-      if (result.type !== 'success') {
-        setLoading(false);
-        return;
-      }
+      const result = await promptGoogle();
+      if (result.type !== 'success') return;
 
-      const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      const infoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${result.authentication!.accessToken}` },
       });
-      const info = (await userInfoRes.json()) as {
+      const info = (await infoRes.json()) as {
         sub: string;
         email: string;
         name: string;
@@ -37,15 +40,93 @@ export default function LoginScreen() {
       };
 
       const user = await ssoExchange('google', info.sub, info.email, info.name, info.picture);
-      if (user) {
-        router.replace('/(tabs)');
-      } else {
-        Alert.alert('Sign-in failed', 'Could not exchange token with the API');
-      }
+      if (user) router.replace('/(tabs)');
+      else Alert.alert('Sign-in failed', 'Could not exchange token with the API');
     } catch (err) {
       Alert.alert('Error', err instanceof Error ? err.message : 'Sign-in failed');
     } finally {
-      setLoading(false);
+      setLoading(null);
+    }
+  };
+
+  // ── Microsoft ────────────────────────────────────────────────────────────────
+  const msDiscovery = useAutoDiscovery(
+    `https://login.microsoftonline.com/${MICROSOFT_TENANT}/v2.0`,
+  );
+  const [, , promptMicrosoft] = useAuthRequest(
+    {
+      clientId: MICROSOFT_CLIENT_ID,
+      scopes: ['openid', 'profile', 'email', 'User.Read'],
+      redirectUri: makeRedirectUri({ scheme: 'rentacar' }),
+    },
+    msDiscovery,
+  );
+
+  const handleMicrosoftSignIn = async () => {
+    if (!MICROSOFT_CLIENT_ID) {
+      Alert.alert('Not configured', 'Microsoft SSO is not configured on this build.');
+      return;
+    }
+    setLoading('microsoft');
+    try {
+      const result = await promptMicrosoft();
+      if (result.type !== 'success') return;
+
+      const graphRes = await fetch('https://graph.microsoft.com/v1.0/me', {
+        headers: { Authorization: `Bearer ${result.authentication!.accessToken}` },
+      });
+      const me = (await graphRes.json()) as {
+        id: string;
+        displayName: string;
+        mail?: string;
+        userPrincipalName?: string;
+      };
+      const email = me.mail ?? me.userPrincipalName ?? '';
+
+      const user = await ssoExchange('microsoft', me.id, email, me.displayName);
+      if (user) router.replace('/(tabs)');
+      else Alert.alert('Sign-in failed', 'Could not exchange token with the API');
+    } catch (err) {
+      Alert.alert('Error', err instanceof Error ? err.message : 'Sign-in failed');
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  // ── Apple ─────────────────────────────────────────────────────────────────────
+  const handleAppleSignIn = async () => {
+    const available = await AppleAuthentication.isAvailableAsync();
+    if (!available) {
+      Alert.alert('Not available', 'Apple Sign In is only available on iOS devices.');
+      return;
+    }
+    setLoading('apple');
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      const name = [credential.fullName?.givenName, credential.fullName?.familyName]
+        .filter(Boolean)
+        .join(' ');
+
+      const user = await ssoExchange(
+        'apple',
+        credential.user,
+        credential.email ?? `${credential.user}@privaterelay.appleid.com`,
+        name || 'Apple User',
+      );
+      if (user) router.replace('/(tabs)');
+      else Alert.alert('Sign-in failed', 'Could not exchange token with the API');
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code !== 'ERR_REQUEST_CANCELED') {
+        Alert.alert('Error', err instanceof Error ? err.message : 'Apple sign-in failed');
+      }
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -68,18 +149,22 @@ export default function LoginScreen() {
           emoji="🔵"
           label="Continue with Google"
           onPress={handleGoogleSignIn}
-          loading={loading}
+          loading={loading === 'google'}
         />
         <SSOButton
           emoji="🟦"
           label="Continue with Microsoft"
-          onPress={() => Alert.alert('Coming soon', 'Microsoft login coming soon')}
+          onPress={handleMicrosoftSignIn}
+          loading={loading === 'microsoft'}
         />
-        <SSOButton
-          emoji="⚫"
-          label="Continue with Apple"
-          onPress={() => Alert.alert('Coming soon', 'Apple login coming soon')}
-        />
+        {Platform.OS === 'ios' && (
+          <SSOButton
+            emoji="⚫"
+            label="Continue with Apple"
+            onPress={handleAppleSignIn}
+            loading={loading === 'apple'}
+          />
+        )}
       </View>
 
       <Text className="text-center text-gray-300 text-xs mt-8">
