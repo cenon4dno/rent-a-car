@@ -1,16 +1,12 @@
 # Backlog
 
-## In Progress
-
-- [ ] [P1] Scaffold monorepo structure — `/apps/web` (Next.js), `/apps/mobile` (Expo), `/apps/api` (NestJS), `/packages/shared` — with root `package.json` and workspace config
-- [ ] [P1] Initialize Next.js 15 web app with Tailwind CSS, ESLint, Prettier, and Husky pre-commit hooks
-- [ ] [P1] Initialize NestJS API with Prisma ORM, SQLite dev database, and base project structure
-
 ## Active
 
-- [ ] [P2] Define Prisma schema: User, Renter, Driver, Vehicle, Booking, Review, Transaction tables with relations
+- [ ] [P1] Add `.gitattributes` to enforce LF line endings (suppresses Windows CRLF warnings)
+- [ ] [P1] Replace `apps/web/CLAUDE.md` and `apps/web/AGENTS.md` boilerplate with project-specific content
 - [ ] [P2] Set up NextAuth.js with Google, Microsoft, Apple SSO providers and JWT session strategy
 - [ ] [P2] Implement KYC document upload flow (User, Renter, Driver) with file storage abstraction
+- [ ] [P2] Scaffold NestJS feature modules: auth, users, vehicles, bookings, payments, reviews
 - [ ] [P3] Build home page: hero search widget, featured vehicles section, top partners carousel
 - [ ] [P3] Build vehicle search and results page with filters
 - [ ] [P3] Build booking flow: selection → review → payment → confirmation pages
@@ -21,7 +17,14 @@
 - [ ] [P4] AI Chatbot with RAG pipeline and MCP integration
 - [ ] [P4] Dispute resolution and ticket system
 - [ ] [P4] Azure App Service deployment + Nginx reverse proxy + GitHub Actions CI/CD
+- [ ] [P4] npm audit fix pass — address 26 vulnerabilities flagged during scaffold
+
+## In Progress
+
+_(none)_
 
 ## Completed
 
-_(none)_
+- [x] [P1] Scaffold monorepo structure — root npm workspaces, `apps/*`, `packages/*` — 2026-06-28
+- [x] [P1] Initialize Next.js 15 web app (App Router, Tailwind, ESLint, TypeScript) — 2026-06-28
+- [x] [P1] Initialize NestJS API with Prisma ORM + SQLite dev DB + initial migration — 2026-06-28
