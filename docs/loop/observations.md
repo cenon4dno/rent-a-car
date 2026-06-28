@@ -1,5 +1,23 @@
 # Observations Log
 
+## 2026-06-29 — Iteration 16 (CI Stabilization)
+
+**Goal:** Get GitHub Actions CI passing on main branch after multiple cascading failures
+**Outcome:** Done — CI (lint/build/test) now green; Deploy blocked on missing Azure secrets (expected)
+**Findings:**
+
+- `npm ci --ignore-scripts` skips Prisma postinstall generation — must run `prisma generate` as an explicit CI step before any TypeScript builds
+- `@rent-a-car/shared` dist is gitignored; CI must build it before web app since Next.js type checking needs `dist/index.d.ts`
+- Prisma `groupBy` inside `$transaction([])` causes TS2615 circular type reference — use `Promise.all` instead
+- `as const` on Prisma `notIn` arrays creates readonly tuple that isn't assignable to `BookingStatus[]` — use the `BookingStatus` enum value directly
+- NextAuth v5 beta `MicrosoftEntraId` provider no longer accepts `tenantId` directly — configure via `issuer` URL: `https://login.microsoftonline.com/${tenantId}/v2.0`
+- Deploy workflow fails without `DATABASE_URL` GitHub secret — this is expected until Azure is provisioned
+
+**Next Actions:**
+
+- Add Azure GitHub secrets to enable Deploy workflow (low priority — app not yet deployed)
+- Mobile: Microsoft/Apple SSO (P4, optional)
+
 ## 2026-06-29 — Iteration 15 (Card Payments + Mobile KYC + npm Cleanup)
 
 **Goal:** PayMongo card payment widget, mobile expo-image-picker KYC, npm audit fix pass

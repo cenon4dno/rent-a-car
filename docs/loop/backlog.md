@@ -10,6 +10,8 @@
 - [x] [P3] Replace disk-based KYC upload with Azure Blob Storage adapter (uploads lost on App Service restart) — 2026-06-29
 - [x] [P4] React Native (Expo) mobile app — mirror web booking flow — 2026-06-29
 - [x] [P4] Mobile: camera-based KYC document upload (expo-image-picker) — 2026-06-29
+- [x] [P3] Fix GitHub Actions CI — prisma generate, shared build, TS errors — 2026-06-29
+- [ ] [P4] Configure Azure GitHub secrets to enable Deploy workflow (DATABASE_URL, publish profiles)
 - [ ] [P4] Mobile: Microsoft/Apple SSO
 - [x] [P4] AI Chatbot with RAG pipeline and MCP integration — 2026-06-29
 - [x] [P4] Dispute resolution and ticket system — 2026-06-29
