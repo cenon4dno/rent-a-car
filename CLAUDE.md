@@ -136,6 +136,48 @@ After execution is complete (or at a natural stopping point):
 | `docs/loop/session-state.md` | Resume point written before a rate-limit pause; read on wakeup |
 | `docs/loop/observations.md` | Cumulative log of findings, issues, and decisions across iterations |
 
+## GitHub Repository
+
+- **Repo:** https://github.com/cenon4dno/rent-a-car
+- **Default branch:** `main`
+- **Token:** stored in `.env` as `GITHUB_TOKEN` (never committed)
+- **Credential helper:** `gh auth setup-git` — run once per machine to wire the token to git
+
+### Milestone Commit & Push Convention
+
+After every major milestone, commit and push immediately:
+
+```powershell
+# Authenticate (once per session)
+$env:GH_TOKEN = $env:GITHUB_TOKEN
+gh auth setup-git
+
+# Stage specific files (never use git add -A or git add . blindly)
+git add <files>
+
+# Commit with milestone tag
+git commit -m "feat(<scope>): <description>`n`nMilestone: <milestone-name>`nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+
+# Push
+git push origin main
+```
+
+**Milestone tags to use in commit messages:**
+
+| Tag | When to use |
+|---|---|
+| `Milestone: monorepo-scaffold` | After initial project structure is created |
+| `Milestone: db-schema` | After Prisma schema is finalized |
+| `Milestone: auth` | After authentication and KYC flows work |
+| `Milestone: booking-flow` | After end-to-end booking flow is functional |
+| `Milestone: payments` | After payment integration is live |
+| `Milestone: dashboards` | After admin and renter dashboards are complete |
+| `Milestone: mobile-app` | After React Native app matches web booking flow |
+| `Milestone: ai-chatbot` | After RAG/MCP chatbot is integrated |
+| `Milestone: deployment` | After Azure/Nginx/CI-CD pipeline is live |
+
+---
+
 ## Rate Limit Handling
 
 Claude Pro enforces a usage cap that resets on a 4-hour rolling window and a weekly aggregate. When a limit is detected or anticipated mid-session:
