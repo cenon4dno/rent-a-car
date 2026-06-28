@@ -1,10 +1,13 @@
 # Backlog
 
-## Active
+## In Progress
 
 - [ ] [P1] Scaffold monorepo structure — `/apps/web` (Next.js), `/apps/mobile` (Expo), `/apps/api` (NestJS), `/packages/shared` — with root `package.json` and workspace config
 - [ ] [P1] Initialize Next.js 15 web app with Tailwind CSS, ESLint, Prettier, and Husky pre-commit hooks
 - [ ] [P1] Initialize NestJS API with Prisma ORM, SQLite dev database, and base project structure
+
+## Active
+
 - [ ] [P2] Define Prisma schema: User, Renter, Driver, Vehicle, Booking, Review, Transaction tables with relations
 - [ ] [P2] Set up NextAuth.js with Google, Microsoft, Apple SSO providers and JWT session strategy
 - [ ] [P2] Implement KYC document upload flow (User, Renter, Driver) with file storage abstraction
@@ -18,10 +21,6 @@
 - [ ] [P4] AI Chatbot with RAG pipeline and MCP integration
 - [ ] [P4] Dispute resolution and ticket system
 - [ ] [P4] Azure App Service deployment + Nginx reverse proxy + GitHub Actions CI/CD
-
-## In Progress
-
-_(none)_
 
 ## Completed
 

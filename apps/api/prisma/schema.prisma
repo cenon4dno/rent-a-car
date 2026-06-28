@@ -1,0 +1,236 @@
+// Rent-a-Car — Prisma schema
+// Dev: SQLite | Prod: PostgreSQL (switch provider + DATABASE_URL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  RENTER
+  DRIVER
+  CUSTOMER
+}
+
+enum KycStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum TrustBadge {
+  NOT_VERIFIED
+  UNDER_VALIDATION
+  VERIFIED
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  HYBRID
+  ELECTRIC
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+  CVT
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  INACTIVE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  avatarUrl    String?
+  role         UserRole  @default(CUSTOMER)
+  kycStatus    KycStatus @default(PENDING)
+  passwordHash String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  renterProfile   RenterProfile?
+  driverProfile   DriverProfile?
+  customerProfile CustomerProfile?
+  sessions        Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RenterProfile {
+  id                 String     @id @default(cuid())
+  userId             String     @unique
+  companyName        String
+  businessPermitUrl  String?
+  companyRegUrl      String?
+  taxIdNumber        String?
+  bankAccountDetails String?
+  trustBadge         TrustBadge @default(NOT_VERIFIED)
+  commissionRate     Float      @default(0.05)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles Vehicle[]
+  bookings Booking[]
+}
+
+model DriverProfile {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  renterId         String
+  licenseUrl       String?
+  backgroundCheckUrl String?
+  kycStatus        KycStatus @default(PENDING)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+}
+
+model CustomerProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  licenseUrl      String?
+  secondaryIdUrl  String?
+  kycStatus       KycStatus @default(PENDING)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+  reviews  Review[]
+}
+
+model Vehicle {
+  id               String           @id @default(cuid())
+  renterId         String
+  make             String
+  model            String
+  year             Int
+  plateNumber      String           @unique
+  description      String?
+  fuelType         FuelType
+  transmission     TransmissionType
+  seatingCapacity  Int
+  dailyRate        Float
+  mileageLimit     Int?
+  imageUrls        String           @default("[]")
+  status           VehicleStatus    @default(AVAILABLE)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  renter   RenterProfile @relation(fields: [renterId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+  reviews  Review[]
+
+  @@index([renterId])
+  @@index([status])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  vehicleId       String
+  customerId      String
+  renterId        String
+  driverId        String?
+  pickupLocation  String
+  startDate       DateTime
+  endDate         DateTime
+  dailyRate       Float
+  platformFeeRate Float         @default(0.05)
+  totalAmount     Float
+  platformFee     Float
+  status          BookingStatus @default(PENDING)
+  reservedUntil   DateTime?
+  qrCode          String?
+  referenceNumber String        @unique @default(cuid())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  vehicle  Vehicle         @relation(fields: [vehicleId], references: [id])
+  customer CustomerProfile @relation(fields: [customerId], references: [id])
+  renter   RenterProfile   @relation(fields: [renterId], references: [id])
+  driver   DriverProfile?  @relation(fields: [driverId], references: [id])
+  payment  Payment?
+  review   Review?
+
+  @@index([vehicleId, startDate, endDate])
+  @@index([customerId])
+  @@index([renterId])
+  @@index([status])
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  bookingId     String   @unique
+  amount        Float
+  currency      String   @default("PHP")
+  provider      String
+  providerRef   String?
+  status        String   @default("PENDING")
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  vehicleId  String
+  reviewerId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  booking  Booking         @relation(fields: [bookingId], references: [id])
+  vehicle  Vehicle         @relation(fields: [vehicleId], references: [id])
+  reviewer CustomerProfile @relation(fields: [reviewerId], references: [id])
+}
+
+model Dispute {
+  id          String   @id @default(cuid())
+  bookingId   String
+  reporterId  String
+  description String
+  status      String   @default("OPEN")
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
