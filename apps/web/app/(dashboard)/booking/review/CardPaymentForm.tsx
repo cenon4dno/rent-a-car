@@ -33,7 +33,7 @@ export function CardPaymentForm({ onCardDetails }: CardPaymentFormProps) {
   };
 
   const handleChange = (field: 'cardNumber' | 'expiry' | 'cvc' | 'cardHolder', raw: string) => {
-    let next: { cardNumber: string; expiry: string; cvc: string; cardHolder: string } = {
+    const next: { cardNumber: string; expiry: string; cvc: string; cardHolder: string } = {
       cardNumber,
       expiry,
       cvc,

@@ -95,8 +95,8 @@ export default async function KycPage() {
       </div>
 
       <p className="text-xs text-gray-400 text-center mt-8">
-        After uploading, your KYC status will be updated to "Under Review". Verification typically
-        takes 1–2 business days.
+        After uploading, your KYC status will be updated to &quot;Under Review&quot;. Verification
+        typically takes 1–2 business days.
       </p>
     </div>
   );
