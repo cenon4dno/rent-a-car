@@ -11,6 +11,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 
 const PLATFORM_FEE_RATE = 0.05;
 const RESERVATION_HOLD_MINUTES = 10;
+const ADDON_RATES = { childSeat: 500, chauffeur: 1500 };
 
 @Injectable()
 export class BookingsService {
@@ -49,8 +50,12 @@ export class BookingsService {
       if (!customerProfile) throw new ForbiddenException('Customer profile not found');
 
       const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      const totalAmount = days * vehicle.dailyRate;
-      const platformFee = totalAmount * PLATFORM_FEE_RATE;
+      const baseAmount = days * vehicle.dailyRate;
+      const addonsAmount =
+        (dto.childSeat ? ADDON_RATES.childSeat * days : 0) +
+        (dto.chauffeur ? ADDON_RATES.chauffeur * days : 0);
+      const totalAmount = baseAmount + addonsAmount;
+      const platformFee = Math.round(totalAmount * PLATFORM_FEE_RATE);
 
       const reservedUntil = new Date(Date.now() + RESERVATION_HOLD_MINUTES * 60 * 1000);
 
@@ -65,6 +70,7 @@ export class BookingsService {
           endDate: end,
           dailyRate: vehicle.dailyRate,
           platformFeeRate: PLATFORM_FEE_RATE,
+          addonsAmount,
           totalAmount,
           platformFee,
           status: 'PENDING',

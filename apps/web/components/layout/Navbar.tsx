@@ -80,6 +80,12 @@ export function Navbar() {
                 >
                   My Bookings
                 </Link>
+                <Link
+                  href="/profile/kyc"
+                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  KYC
+                </Link>
                 <Link href="/profile" className="text-sm text-gray-700 hover:text-blue-600">
                   {session.user?.name?.split(' ')[0]}
                 </Link>
@@ -157,6 +163,12 @@ export function Navbar() {
                   )}
                   <Link href="/bookings" className="text-sm text-gray-700 hover:text-blue-600 py-1">
                     My Bookings
+                  </Link>
+                  <Link
+                    href="/profile/kyc"
+                    className="text-sm text-gray-700 hover:text-blue-600 py-1"
+                  >
+                    KYC Documents
                   </Link>
                   <Button
                     variant="secondary"

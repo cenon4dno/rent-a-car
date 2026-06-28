@@ -142,6 +142,28 @@
 
 ---
 
+## 2026-06-28 — Iteration 9 (Add-ons Alignment + KYC Document Upload)
+
+**Goal:** Wire backend add-ons into booking total; KYC document upload flow for users and renters
+**Outcome:** Done — Milestone: addons-kyc
+**Findings:**
+
+- `addonsAmount Float @default(0)` added to Booking model via migration `add-booking-addons`. SQLite migration applied cleanly.
+- Backend now computes `addonsAmount = (childSeat ? 500*days : 0) + (chauffeur ? 1500*days : 0)` and includes it in `totalAmount`. `platformFee` is now `Math.round(totalAmount * 0.05)` for integer precision.
+- `@types/multer` is a devDependency — `multer` itself comes from `@nestjs/platform-express` which ships it bundled. No runtime dependency needed.
+- `NestFactory.create<NestExpressApplication>()` with `app.useStaticAssets()` serves `apps/api/uploads/` at `/uploads/:filename` — this is outside the `api/v1` global prefix so files are directly accessible at `http://localhost:4000/uploads/...`.
+- `POST /users/documents/:type` uses `FileInterceptor` with `diskStorage`, 5 MB limit, JPEG/PNG/PDF filter. On success it updates the matching profile URL field (customer or renter) and returns `{ data: { fileUrl } }`.
+- Frontend `uploadDocument()` uses `fetch` directly (not `apiFetch`) since it sends `FormData` not JSON — no `Content-Type` header needed (browser sets multipart boundary automatically).
+- KYC page auto-detects role from session and shows either customer docs (license + secondary ID) or renter docs (business permit + company reg). Badge shows current KYC status from API.
+- After uploading, admin updates KYC status manually via the admin dashboard — there is no automatic status transition on upload (by design: human verification is required).
+
+**Next Actions:** (added to backlog)
+
+- Integrate PayMongo/Stripe + webhook handler for real payment confirmation (P3)
+- GitHub Actions CI/CD pipeline + Azure App Service deployment config (P4)
+
+---
+
 ## 2026-06-28 — Iteration 8 (Admin Dashboard)
 
 **Goal:** Admin Portal — platform GMV/commission stats, user management + KYC, per-renter commission config

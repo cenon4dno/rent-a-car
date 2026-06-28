@@ -2,8 +2,8 @@
 
 ## Active
 
-- [ ] [P2] Implement KYC document upload flow (User, Renter, Driver) with file storage abstraction
-- [ ] [P3] Add add-ons support to CreateBookingDto + BookingsService (backend total alignment)
+- [x] [P2] Implement KYC document upload flow (User, Renter, Driver) — 2026-06-28
+- [x] [P3] Add add-ons support to CreateBookingDto + BookingsService (backend total alignment) — 2026-06-28
 - [ ] [P3] Integrate PayMongo/Stripe + webhook handler for real payment confirmation
 - [ ] [P4] GitHub Actions CI/CD pipeline + Azure App Service deployment config
 - [ ] [P4] React Native (Expo) mobile app — mirror web booking flow

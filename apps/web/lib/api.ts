@@ -103,6 +103,8 @@ export async function createBooking(
     startDate: string;
     endDate: string;
     driverId?: string;
+    childSeat?: boolean;
+    chauffeur?: boolean;
   },
   token: string,
 ) {
@@ -290,4 +292,53 @@ export async function updateRenterCommission(
     body: JSON.stringify({ commissionRate }),
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// ─── User profile / KYC ──────────────────────────────────────────────────────
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  role: string;
+  kycStatus: string;
+  customerProfile: {
+    licenseUrl: string | null;
+    secondaryIdUrl: string | null;
+    kycStatus: string;
+  } | null;
+  renterProfile: {
+    companyName: string;
+    businessPermitUrl: string | null;
+    companyRegUrl: string | null;
+    taxIdNumber: string | null;
+    trustBadge: string;
+  } | null;
+}
+
+export async function getMe(token: string) {
+  return apiFetch<ApiResponse<UserProfile>>(`/users/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+export async function uploadDocument(
+  type: string,
+  file: File,
+  token: string,
+): Promise<{ data: { fileUrl: string } }> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/documents/${type}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { message?: string }).message ?? 'Upload failed');
+  }
+  return res.json() as Promise<{ data: { fileUrl: string } }>;
 }

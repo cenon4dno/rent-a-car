@@ -75,6 +75,8 @@ export function ReviewClient({
           pickupLocation,
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
+          childSeat: addons.includes('childSeat'),
+          chauffeur: addons.includes('chauffeur'),
         },
         session.apiToken,
       );

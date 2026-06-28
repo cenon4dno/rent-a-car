@@ -172,6 +172,7 @@ model Booking {
   endDate         DateTime
   dailyRate       Float
   platformFeeRate Float         @default(0.05)
+  addonsAmount    Float         @default(0)
   totalAmount     Float
   platformFee     Float
   status          BookingStatus @default(PENDING)
