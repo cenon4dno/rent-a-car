@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { getBooking } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { DisputeForm } from './DisputeForm';
 
 interface BookingPageProps {
   params: Promise<{ id: string }>;
@@ -164,6 +165,11 @@ export default async function BookingDetailPage({ params }: BookingPageProps) {
             <Button variant="ghost">Browse More Cars</Button>
           </Link>
         </div>
+
+        {/* Dispute */}
+        {['COMPLETED', 'ACTIVE', 'CONFIRMED'].includes(b.status) && (
+          <DisputeForm bookingId={b.id} />
+        )}
       </div>
     </div>
   );

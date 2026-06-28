@@ -8,13 +8,14 @@ import {
   UseInterceptors,
   Req,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UsersService, DocumentType } from './users.service';
+import { STORAGE_PROVIDER, IStorageProvider } from '../storage/storage-provider.interface';
 
 const VALID_DOC_TYPES: DocumentType[] = ['license', 'secondaryId', 'businessPermit', 'companyReg'];
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'application/pdf'];
@@ -24,7 +25,10 @@ const ALLOWED_MIME = ['image/jpeg', 'image/png', 'application/pdf'];
 @UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    @Inject(STORAGE_PROVIDER) private readonly storage: IStorageProvider,
+  ) {}
 
   @Get('me')
   async getMe(@Req() req: { user: { userId: string } }) {
@@ -35,13 +39,7 @@ export class UsersController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (_req, file, cb) => {
-          const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${unique}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIME.includes(file.mimetype)) {
           cb(null, true);
@@ -49,7 +47,7 @@ export class UsersController {
           cb(new BadRequestException('Only JPEG, PNG, and PDF files are accepted'), false);
         }
       },
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   async uploadDocument(
@@ -62,7 +60,7 @@ export class UsersController {
     }
     if (!file) throw new BadRequestException('No file provided');
 
-    const fileUrl = `/uploads/${file.filename}`;
+    const fileUrl = await this.storage.upload(file.buffer, file.originalname, file.mimetype);
     const result = await this.usersService.updateDocumentUrl(
       req.user.userId,
       type as DocumentType,

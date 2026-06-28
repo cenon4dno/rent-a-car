@@ -354,3 +354,34 @@ export async function uploadDocument(
   }
   return res.json() as Promise<{ data: { fileUrl: string } }>;
 }
+
+// ─── Disputes ─────────────────────────────────────────────────────────────────
+
+export interface Dispute {
+  id: string;
+  bookingId: string;
+  reporterId: string;
+  description: string;
+  status: string;
+  resolution: string | null;
+  createdAt: string;
+}
+
+export async function createDispute(
+  bookingId: string,
+  description: string,
+  token: string,
+): Promise<ApiResponse<Dispute>> {
+  return apiFetch<ApiResponse<Dispute>>('/disputes', {
+    method: 'POST',
+    body: JSON.stringify({ bookingId, description }),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function getDisputes(token: string): Promise<ApiResponse<Dispute[]>> {
+  return apiFetch<ApiResponse<Dispute[]>>('/disputes', {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
