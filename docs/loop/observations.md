@@ -142,6 +142,29 @@
 
 ---
 
+## 2026-06-29 — Iteration 11 (CI/CD + Deployment Config)
+
+**Goal:** GitHub Actions CI/CD pipeline, Azure App Service deployment, Nginx reverse proxy config
+**Outcome:** Done — Milestone: deployment
+**Findings:**
+
+- `ci.yml` runs two jobs: `lint-and-build` (ESLint + tsc build for both apps) and `test-api` (jest unit tests). Split to fail fast on lint before running heavier tests.
+- Web build in CI requires `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_API_URL` as env vars — Next.js fails to build without them (compile-time validation).
+- `deploy.yml` deploys API first, then web (`needs: deploy-api`) to ensure DB migrations run before the web app goes live.
+- `prisma migrate deploy` (not `migrate dev`) is the correct production migration command — it applies pending migrations without creating new ones.
+- Nginx `nginx.conf` covers both HTTP (redirect) and HTTPS (SSL) server blocks. `/api/*` and `/uploads/*` proxy to the NestJS process; `/` proxies to Next.js.
+- Azure App Service (Linux) runs Node.js natively without Docker — the `azure/webapps-deploy@v3` action deploys the built package directory.
+- For KYC document uploads in production, `apps/api/uploads/` should be replaced with Azure Blob Storage (connection string in env). The current disk-based storage won't survive App Service restarts or scaling — flagged in `.env.production.example`.
+- `docs/deployment.md` documents the one-time Azure CLI setup, all required GitHub secrets, App Service env vars, and migration commands.
+
+**Next Actions:** (added to backlog)
+
+- React Native (Expo) mobile app — mirror web booking flow (P4)
+- AI Chatbot with RAG pipeline and MCP integration (P4)
+- Replace disk-based KYC upload with Azure Blob Storage adapter (P3)
+
+---
+
 ## 2026-06-28 — Iteration 10 (Payment Provider Integration)
 
 **Goal:** Replace hard-coded stub with a real payment provider abstraction (IPaymentProvider); add PayMongo adapter and webhook handler

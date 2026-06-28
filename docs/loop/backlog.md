@@ -6,7 +6,8 @@
 - [x] [P3] Add add-ons support to CreateBookingDto + BookingsService (backend total alignment) — 2026-06-28
 - [x] [P3] Integrate PayMongo/Stripe + webhook handler for real payment confirmation — 2026-06-28
 - [ ] [P3] Embed PayMongo.js card payment widget (card payments require JS SDK, not redirect)
-- [ ] [P4] GitHub Actions CI/CD pipeline + Azure App Service deployment config
+- [x] [P4] GitHub Actions CI/CD pipeline + Azure App Service deployment config — 2026-06-29
+- [ ] [P3] Replace disk-based KYC upload with Azure Blob Storage adapter (uploads lost on App Service restart)
 - [ ] [P4] React Native (Expo) mobile app — mirror web booking flow
 - [ ] [P4] AI Chatbot with RAG pipeline and MCP integration
 - [ ] [P4] Dispute resolution and ticket system
