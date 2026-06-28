@@ -56,3 +56,25 @@
 - Scaffold NestJS feature modules: vehicles, bookings, payments, reviews (P2)
 - Build home page UI: hero search widget, featured vehicles, top partners (P3)
 - Add `apps/web/.env.local.example` note to README so developers know to copy it
+
+---
+
+## 2026-06-28 — Iteration 3 (NestJS API Feature Modules)
+
+**Goal:** Scaffold vehicles, bookings, payments, reviews modules with full CRUD + Swagger docs
+**Outcome:** Done — pushed as `Milestone: api-modules` (commit 4151874)
+**Findings:**
+
+- Prisma `$transaction` with an async callback is the right pattern for booking concurrency — it runs in a serializable transaction and the conflict check + create happen atomically. SQLite serializes writes by default, so this is sufficient for dev. PostgreSQL in prod will need explicit row-level locking if contention is high.
+- The `VehiclesService.search()` availability filter is a two-step query (find booked IDs, then exclude) rather than a subquery — acceptable for SQLite/dev but worth converting to a JOIN when migrating to PostgreSQL.
+- `BookingsService` uses `status: status as any` cast to sidestep the Prisma enum type — this is a known pain point when string-typed status values are passed dynamically. A proper fix is to define a `BookingStatus` enum in the service and use it explicitly.
+- `PaymentsModule` is a stub — it records payment intent and sets status but does NOT call PayMongo/Stripe yet. A webhook handler is needed to call `confirmPayment()` when the provider posts a success event.
+- `RolesGuard` correctly uses `Reflector.getAllAndOverride` so class-level and method-level `@Roles()` decorators both work.
+- Lint-staged passed on all 22 files at commit time — Prettier reformatted several files to single-line imports and arrow-function style.
+
+**Next Actions:** (added to backlog)
+
+- Build Next.js home page: hero search widget, featured vehicles, top partners carousel (P3)
+- Build vehicle search/results page (P3)
+- Fix `status as any` cast in BookingsService with explicit enum (minor cleanup)
+- Add PayMongo/Stripe webhook handler to PaymentsModule (P3)
