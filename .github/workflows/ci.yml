@@ -32,6 +32,9 @@ jobs:
       - name: Run ESLint (api)
         run: npm run lint --workspace=@rent-a-car/api
 
+      - name: Build shared package
+        run: npm run build --workspace=@rent-a-car/shared
+
       - name: TypeScript build (api)
         run: npm run build --workspace=@rent-a-car/api
 
