@@ -1,29 +1,32 @@
-# Current Plan — Iteration 6
+# Current Plan — Iteration 7
 
-**Goal:** Booking flow (review → confirm & pay stub → confirmation) + My Bookings page
+**Goal:** Renter Dashboard — fleet CRUD, booking management, revenue overview
 **Started:** 2026-06-28
-**Milestone commit tag:** `booking-flow`
+**Milestone commit tag:** `renter-dashboard`
 
 ## Acceptance Criteria
 
-- `/booking/review` reads vehicle/date/addon params, shows price breakdown, payment method selector
-- "Confirm & Pay" creates booking → creates payment → confirms payment (stub) → redirects to `/booking/[id]`
-- `/booking/[id]` shows confirmation ticket (reference, vehicle summary, dates, status, total)
-- `/bookings` lists all user bookings with status badges and vehicle names
-- Navbar shows "My Bookings" link for authenticated users
-- Auth guard layout protects all `/booking/*` and `/bookings` routes
+- `GET /vehicles/my` returns all vehicles owned by the authenticated renter
+- Renter layout guards the `/renter/*` route group to RENTER role only
+- `/renter` overview shows stats cards (total vehicles, active bookings, MTD bookings, MTD revenue)
+- `/renter/fleet` lists renter's vehicles with status badges, edit/deactivate buttons
+- `/renter/fleet/new` form creates a vehicle via POST /vehicles
+- `/renter/fleet/[id]/edit` form pre-fills and updates via PATCH /vehicles/:id
+- `/renter/bookings` lists bookings with confirm/cancel/complete action buttons
+- Navbar adds "Dashboard" link for RENTER-role users
 
 ## Steps
 
-1. [x] Write plan (current-plan.md)
-2. [ ] Extend `lib/api.ts` with booking/payment types and API helpers
-3. [ ] Create `app/(dashboard)/layout.tsx` — auth redirect guard
-4. [ ] Create `app/(dashboard)/booking/review/page.tsx` + `ReviewClient.tsx`
-5. [ ] Create `app/(dashboard)/booking/[id]/page.tsx` — confirmation page
-6. [ ] Create `app/(dashboard)/bookings/page.tsx` — My Bookings list
-7. [ ] Update `Navbar.tsx` — My Bookings link for authenticated users
-8. [ ] Commit + push → Milestone: booking-flow
-9. [ ] Update observations, backlog, clear plan
+1. [x] Close Iteration 6, write this plan
+2. [ ] Add `findByRenter()` to VehiclesService + `GET /vehicles/my` to VehiclesController
+3. [ ] Extend `lib/api.ts` with vehicle CRUD + booking action helpers
+4. [ ] Create `app/(dashboard)/renter/layout.tsx` — RENTER role guard
+5. [ ] Create `app/(dashboard)/renter/page.tsx` — overview dashboard
+6. [ ] Create fleet pages: list, `VehicleForm.tsx`, new, edit
+7. [ ] Create `app/(dashboard)/renter/bookings/page.tsx`
+8. [ ] Update Navbar
+9. [ ] Commit + push → Milestone: renter-dashboard
+10. [ ] Update observations, backlog, clear plan
 
 ## Cutpoint
 

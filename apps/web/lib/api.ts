@@ -146,3 +146,73 @@ export async function confirmPayment(bookingId: string, token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// ─── Booking actions ──────────────────────────────────────────────────────────
+
+function bookingAction(id: string, action: string, token: string) {
+  return apiFetch<ApiResponse<BookingDetail>>(`/bookings/${id}/${action}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export const confirmBooking = (id: string, token: string) => bookingAction(id, 'confirm', token);
+export const cancelBooking = (id: string, token: string) => bookingAction(id, 'cancel', token);
+export const completeBooking = (id: string, token: string) => bookingAction(id, 'complete', token);
+
+// ─── Vehicle management (RENTER) ─────────────────────────────────────────────
+
+export interface RenterVehicle extends VehicleWithRenter {
+  description?: string | null;
+  mileageLimit?: number | null;
+  bookings: { id: string; status: string; startDate: string; endDate: string }[];
+  _count: { reviews: number };
+}
+
+export interface CreateVehicleBody {
+  make: string;
+  model: string;
+  year: number;
+  plateNumber: string;
+  description?: string;
+  fuelType: string;
+  transmission: string;
+  seatingCapacity: number;
+  dailyRate: number;
+  mileageLimit?: number;
+  imageUrls?: string[];
+}
+
+export async function getMyVehicles(token: string) {
+  return apiFetch<ApiResponse<RenterVehicle[]>>(`/vehicles/my`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+export async function createVehicle(body: CreateVehicleBody, token: string) {
+  return apiFetch<ApiResponse<RenterVehicle>>(`/vehicles`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function updateVehicle(
+  id: string,
+  body: Partial<CreateVehicleBody> & { status?: string },
+  token: string,
+) {
+  return apiFetch<ApiResponse<RenterVehicle>>(`/vehicles/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function deleteVehicle(id: string, token: string) {
+  return apiFetch<ApiResponse<RenterVehicle>>(`/vehicles/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}

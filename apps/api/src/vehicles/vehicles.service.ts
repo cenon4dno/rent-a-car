@@ -84,6 +84,22 @@ export class VehiclesService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
+  async findByRenter(userId: string) {
+    const renterProfile = await this.prisma.renterProfile.findUnique({ where: { userId } });
+    if (!renterProfile) return [];
+    return this.prisma.vehicle.findMany({
+      where: { renterId: renterProfile.id },
+      include: {
+        bookings: {
+          where: { status: { in: ['PENDING', 'CONFIRMED', 'ACTIVE'] } },
+          select: { id: true, status: true, startDate: true, endDate: true },
+        },
+        _count: { select: { reviews: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findOne(id: string) {
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { id },

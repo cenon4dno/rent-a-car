@@ -58,6 +58,14 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <div className="flex items-center gap-3">
+                {(session.user as { role?: string })?.role === 'RENTER' && (
+                  <Link
+                    href="/renter"
+                    className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 <Link
                   href="/bookings"
                   className="text-sm text-gray-600 hover:text-blue-600 transition-colors"

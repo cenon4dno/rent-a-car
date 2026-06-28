@@ -30,6 +30,15 @@ export class VehiclesController {
     return this.vehiclesService.search(dto);
   }
 
+  @Get('my')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('RENTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get the authenticated renter's fleet with active booking counts" })
+  findMine(@Request() req: { user: { id: string } }) {
+    return this.vehiclesService.findByRenter(req.user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get vehicle detail with renter info and recent reviews' })
   findOne(@Param('id') id: string) {

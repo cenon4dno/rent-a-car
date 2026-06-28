@@ -101,6 +101,27 @@
 
 ---
 
+## 2026-06-28 — Iteration 6 (Booking Flow + My Bookings)
+
+**Goal:** End-to-end booking flow: review → confirm+pay stub → confirmation ticket; plus My Bookings list
+**Outcome:** Done — pushed as `Milestone: booking-flow` (commit f1bc21a)
+**Findings:**
+
+- The API's `BookingsService.create` calculates `totalAmount = days * dailyRate` and `platformFee = totalAmount * 0.05`. Add-ons (child seat, chauffeur) are tracked client-side only — the backend does not yet include them in the total. This is a known gap; the backend needs an `addons` field in `CreateBookingDto` in a future iteration.
+- The payment stub flow (POST /bookings → POST /payments/:id → PATCH /payments/:id/confirm) correctly transitions booking status: PENDING → CONFIRMED, and payment status: PENDING → PAID, all within one user action. This is sufficient for the stub; a real webhook handler will replace the explicit confirm call.
+- `(dashboard)/layout.tsx` auth guard uses `auth()` server-side — this is the correct pattern for App Router route groups. The guard runs on every request to any route in the group.
+- `QrPlaceholder` renders a deterministic 7×7 grid seeded by the booking reference string — purely decorative but visually distinct per booking.
+- `session!.apiToken` non-null assertion in `MyBookingsPage` is safe because the layout already guarantees a session exists before any dashboard page renders.
+- Prettier formatted ternary chains in the bookings list to a nested ternary — acceptable under the lint rules.
+
+**Next Actions:** (added to backlog)
+
+- Build Renter Dashboard: fleet management, booking management, revenue BI (P3)
+- Build Admin Dashboard: user management, platform BI, commission config (P3)
+- Add add-ons support to `CreateBookingDto` and `BookingsService` so backend total matches frontend (P3)
+
+---
+
 ## 2026-06-28 — Iteration 5 (Search + Vehicle Detail Pages)
 
 **Goal:** `/search` results page + `/vehicle/[id]` detail page with live booking form
