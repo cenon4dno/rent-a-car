@@ -97,6 +97,25 @@ export async function getTopRenters(limit = 6) {
   return apiFetch<ApiResponse<TopRenter[]>>(`/vehicles/renters?limit=${limit}`);
 }
 
+export interface RenterFleetVehicle extends BaseVehicle {
+  imageUrls: string;
+  averageRating: number | null;
+  _count: { reviews: number };
+}
+
+export interface RenterPublicProfile {
+  id: string;
+  companyName: string;
+  trustBadge: string;
+  fleetCount: number;
+  averageRating: number | null;
+  vehicles: RenterFleetVehicle[];
+}
+
+export async function getRenterProfile(id: string) {
+  return apiFetch<ApiResponse<RenterPublicProfile>>(`/vehicles/renters/${id}`);
+}
+
 export async function getVehicle(id: string) {
   return apiFetch<ApiResponse<VehicleDetail>>(`/vehicles/${id}`);
 }

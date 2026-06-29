@@ -3,11 +3,14 @@
 ## Active
 
 - [x] [P2] Add email/password login field to the login page alongside SSO buttons — seed default admin account (email: cenon4dno@gmail.com, password stored in ADMIN_SEED_PASSWORD env var); backend: POST /auth/login with bcrypt password validation; web: CredentialsProvider in NextAuth config — 2026-06-29
+- [ ] [P2] Persistent site header — wrap all pages in a shared layout that renders the Navbar so it persists across navigation without re-mounting; ensure auth state, active route highlight, and responsive menu are consistent on every route
+- [ ] [P2] Persistent site footer — ensure the Footer component renders on every page via the shared root layout, matching the header's persistence behaviour
+- [ ] [P2] Homepage featured-car carousel — full-width autoplay carousel on the home page showcasing available vehicles with high-res cover photos, a gradient overlay with car name/price/rating badge, a prominent "Rent Now" CTA, smooth slide animation with prev/next arrows, and dot pagination indicators; source vehicles from the live API (`/vehicles?featured=true`) and fall back to top-rated if no featured flag is set
 - [ ] [P2] Driver user group — NestJS DriversModule, driver profiles (public/private), Renter registers drivers, driver schedule, professional license KYC upload, background check clearance field
 - [ ] [P2] Two-way review system — User reviews Car/Driver/Renter post-trip; Renter reviews User; wire into ReviewsModule and display on profiles
 - [ ] [P2] Cancellation/Refund SLA automation — 100% refund if cancelled ≥48h before pickup, 50% if <48h, 0% if <24h; automated refund routing back to original payment method
 - [ ] [P2] Notification system — email/push notifications for booking confirmation, cancellation, late return alerts, payment failure, dispute updates, driver no-show
-- [ ] [P2] Renter public profile page (`/renter/[id]`) — company contact details, fleet list, average ratings, reviews, Trust Badge (Verified / Undergoing Validation / Not Verified); publicly accessible without login
+- [x] [P2] Renter public profile page (`/renter/[id]`) — company contact details, fleet list, average ratings, Trust Badge; publicly accessible without login — 2026-06-29
 - [ ] [P2] Car use-case tagging system — add a `tags` field to vehicles (e.g. "Wedding", "House Move", "Airport Transfer", "Road Trip", "Corporate", "Group Tour"); Renter tags vehicles when posting; search/filter page exposes a scenario picker so users select their use case and see only suitable vehicles; tags stored as a string array in Prisma schema, indexed for query performance
 - [ ] [P3] Car comparison feature — users can select up to 3 cars from search results and compare side-by-side (specs, pricing, ratings, add-ons, mileage limits, fuel type, transmission, seating capacity)
 - [ ] [P3] QR code on booking confirmation ticket — generate and display QR code with booking reference number on the Booked confirmation page
@@ -28,6 +31,7 @@
 - [ ] [P4] Configure Azure GitHub secrets to enable Deploy workflow (DATABASE_URL, publish profiles)
 - [ ] [P4] Meta (Facebook) SSO — add Meta provider to NextAuth alongside Google, Microsoft, Apple
 - [ ] [P4] Admin CMS for legal pages — dynamic Legal, T&C, and Contact Us pages manageable via Admin dashboard
+- [ ] [P4] Footer "Created by u2i" credit — add u2i logo and "Created by u2i" text to the site footer linking to https://u2i.ai/
 - [ ] [P4] Third-party KYC verification — integrate Onfido or Veriff API for automated document verification before allowing bookings; currently manual admin approval only
 
 - [x] [P2] Implement KYC document upload flow (User, Renter, Driver) — 2026-06-28

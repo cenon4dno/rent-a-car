@@ -1,0 +1,134 @@
+name: Deploy to Azure App Service (Dev)
+
+# Trigger manually or on pushes to the dev branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+
+env:
+  AZURE_WEBAPP_NAME_API: rent-a-car-api-dev
+  AZURE_WEBAPP_NAME_WEB: rent-a-car-web-dev
+  NODE_VERSION: '20'
+
+# ── Setup checklist ────────────────────────────────────────────────────────────
+#
+# 1. Create a GitHub Actions environment named "dev" in repo → Settings → Environments
+#    and add these secrets:
+#
+#    AZURE_WEBAPP_PUBLISH_PROFILE_API_DEV
+#      Download from: Azure Portal → rent-a-car-api-dev → Overview → Get publish profile
+#
+#    AZURE_WEBAPP_PUBLISH_PROFILE_WEB_DEV
+#      Download from: Azure Portal → rent-a-car-web-dev → Overview → Get publish profile
+#
+#    DEV_AUTH_SECRET          (run: openssl rand -hex 32)
+#    DEV_NEXTAUTH_URL         e.g. https://rent-a-car-web-dev.azurewebsites.net
+#    DEV_NEXT_PUBLIC_API_URL  e.g. https://rent-a-car-api-dev.azurewebsites.net
+#
+# 2. In Azure Portal → rent-a-car-api-dev → Configuration → Application Settings, add:
+#
+#    DATABASE_URL    = file:/home/site/wwwroot/prisma/dev.db
+#    JWT_SECRET      = <any strong secret>
+#    ALLOWED_ORIGINS = https://rent-a-car-web-dev.azurewebsites.net
+#    NODE_ENV        = production
+#    PORT            = 8080   (App Service injects this automatically — set for clarity)
+#
+# 3. In Azure Portal → rent-a-car-web-dev → Configuration → Application Settings, add:
+#
+#    AUTH_SECRET   = <same value as DEV_AUTH_SECRET>
+#    NEXTAUTH_URL  = https://rent-a-car-web-dev.azurewebsites.net
+#
+# ── App Service creation (run once via Azure CLI) ──────────────────────────────
+#   az group create -n rent-a-car-dev -l southeastasia
+#   az appservice plan create -n rent-a-car-dev-plan -g rent-a-car-dev --sku B1 --is-linux
+#   az webapp create -n rent-a-car-api-dev -g rent-a-car-dev -p rent-a-car-dev-plan --runtime "NODE:20-lts"
+#   az webapp create -n rent-a-car-web-dev -g rent-a-car-dev -p rent-a-car-dev-plan --runtime "NODE:20-lts"
+# ──────────────────────────────────────────────────────────────────────────────
+
+jobs:
+  deploy-api:
+    name: Deploy API (Dev)
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: apps/api
+
+      - name: Build API
+        run: npm run build --workspace=@rent-a-car/api
+
+      - name: Bundle API for deployment
+        # Creates a self-contained directory: compiled dist + prisma schema/migrations
+        # + production node_modules (including prisma CLI for runtime migrations).
+        run: |
+          mkdir -p api-bundle
+          cp -r apps/api/dist api-bundle/dist
+          cp -r apps/api/prisma api-bundle/prisma
+          cp apps/api/package.json api-bundle/package.json
+          cd api-bundle
+          npm install --omit=dev
+          printf '#!/bin/sh\nnode_modules/.bin/prisma migrate deploy\nexec node dist/main.js\n' > start.sh
+          chmod +x start.sh
+
+      - name: Deploy API to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME_API }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_DEV }}
+          package: api-bundle
+          startup-command: sh start.sh
+
+  deploy-web:
+    name: Deploy Web (Dev)
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build Next.js
+        # NEXT_PUBLIC_API_URL is baked into the client bundle at build time.
+        run: npm run build --workspace=@rent-a-car/web
+        env:
+          AUTH_SECRET: ${{ secrets.DEV_AUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.DEV_NEXTAUTH_URL }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.DEV_NEXT_PUBLIC_API_URL }}
+
+      - name: Assemble standalone bundle
+        # Next.js standalone output is self-contained (its own node_modules subset).
+        # Static assets and public files must be copied in alongside it.
+        run: |
+          cp -r apps/web/.next/standalone web-bundle
+          cp -r apps/web/.next/static web-bundle/.next/static
+          cp -r apps/web/public/. web-bundle/public/
+
+      - name: Deploy Web to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME_WEB }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB_DEV }}
+          package: web-bundle
+          startup-command: node server.js

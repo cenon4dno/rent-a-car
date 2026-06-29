@@ -143,6 +143,56 @@ export class VehiclesService {
     });
   }
 
+  async getRenterProfile(renterId: string) {
+    const renter = await this.prisma.renterProfile.findUnique({
+      where: { id: renterId },
+      select: {
+        id: true,
+        companyName: true,
+        trustBadge: true,
+        _count: { select: { vehicles: true } },
+        vehicles: {
+          where: { status: { not: 'INACTIVE' } },
+          select: {
+            id: true,
+            make: true,
+            model: true,
+            year: true,
+            fuelType: true,
+            transmission: true,
+            seatingCapacity: true,
+            dailyRate: true,
+            imageUrls: true,
+            status: true,
+            reviews: { select: { rating: true } },
+            _count: { select: { reviews: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+    if (!renter) throw new NotFoundException('Renter not found');
+
+    const allRatings = renter.vehicles.flatMap((v) => v.reviews.map((r) => r.rating));
+    const averageRating = allRatings.length
+      ? allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length
+      : null;
+
+    return {
+      id: renter.id,
+      companyName: renter.companyName,
+      trustBadge: renter.trustBadge,
+      fleetCount: renter._count.vehicles,
+      averageRating,
+      vehicles: renter.vehicles.map(({ reviews, ...v }) => ({
+        ...v,
+        averageRating: reviews.length
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+          : null,
+      })),
+    };
+  }
+
   async getTopRenters(limit = 6) {
     const renters = await this.prisma.renterProfile.findMany({
       where: { trustBadge: { not: 'NOT_VERIFIED' } },

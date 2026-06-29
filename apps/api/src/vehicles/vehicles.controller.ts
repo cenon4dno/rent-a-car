@@ -45,6 +45,12 @@ export class VehiclesController {
     return { data: await this.vehiclesService.getTopRenters(limit ? Number(limit) : 6) };
   }
 
+  @Get('renters/:id')
+  @ApiOperation({ summary: 'Get public renter profile with fleet and average rating' })
+  async getRenterProfile(@Param('id') id: string) {
+    return { data: await this.vehiclesService.getRenterProfile(id) };
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get vehicle detail with renter info and recent reviews' })
   async findOne(@Param('id') id: string) {
