@@ -1,6 +1,4 @@
 import Link from 'next/link';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
 import { SearchWidget } from '@/components/ui/SearchWidget';
 import { VehicleCard } from '@/components/ui/VehicleCard';
 import { PartnerCard } from '@/components/ui/PartnerCard';
@@ -70,9 +68,7 @@ export default async function HomePage() {
   const topRenters = renterResult?.data ?? [];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-
+    <>
       {/* ── Hero ── */}
       <section className="relative bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -232,9 +228,7 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
-
-      <Footer />
-    </div>
+    </>
   );
 }
 

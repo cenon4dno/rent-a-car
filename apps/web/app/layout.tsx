@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { SessionProvider } from 'next-auth/react';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 import { ChatWidget } from '@/components/ui/ChatWidget';
 import './globals.css';
 
@@ -29,7 +31,9 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <SessionProvider>
-          {children}
+          <Navbar />
+          <main className="flex-1 flex flex-col">{children}</main>
+          <Footer />
           <ChatWidget />
         </SessionProvider>
       </body>
