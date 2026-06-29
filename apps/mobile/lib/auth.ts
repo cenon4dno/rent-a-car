@@ -35,7 +35,7 @@ export async function ssoExchange(
   image?: string,
 ): Promise<AuthUser | null> {
   try {
-    const apiBase = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
+    const apiBase = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
     const res = await fetch(`${apiBase}/auth/sso`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
