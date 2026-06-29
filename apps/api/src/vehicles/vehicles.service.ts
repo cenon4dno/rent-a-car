@@ -142,4 +142,24 @@ export class VehiclesService {
       data: { status: 'INACTIVE' },
     });
   }
+
+  async getTopRenters(limit = 6) {
+    const renters = await this.prisma.renterProfile.findMany({
+      where: { trustBadge: { not: 'NOT_VERIFIED' } },
+      select: {
+        id: true,
+        companyName: true,
+        trustBadge: true,
+        _count: { select: { vehicles: true } },
+      },
+      orderBy: { vehicles: { _count: 'desc' } },
+      take: limit,
+    });
+    return renters.map((r) => ({
+      id: r.id,
+      companyName: r.companyName,
+      trustBadge: r.trustBadge,
+      fleetCount: r._count.vehicles,
+    }));
+  }
 }

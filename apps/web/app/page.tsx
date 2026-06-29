@@ -5,107 +5,9 @@ import { SearchWidget } from '@/components/ui/SearchWidget';
 import { VehicleCard } from '@/components/ui/VehicleCard';
 import { PartnerCard } from '@/components/ui/PartnerCard';
 import { Button } from '@/components/ui/Button';
+import { searchVehicles, getTopRenters, type VehicleWithRenter, type TopRenter } from '@/lib/api';
 
-// Static seed data shown until the API is live and seeded
-const FEATURED_VEHICLES = [
-  {
-    id: '1',
-    make: 'Toyota',
-    model: 'Vios',
-    year: 2023,
-    fuelType: 'GASOLINE',
-    transmission: 'Automatic',
-    seatingCapacity: 5,
-    dailyRate: 2500,
-    renterName: 'Sunshine Rentals',
-    trustBadge: 'VERIFIED',
-    averageRating: 4.8,
-  },
-  {
-    id: '2',
-    make: 'Honda',
-    model: 'CR-V',
-    year: 2024,
-    fuelType: 'HYBRID',
-    transmission: 'CVT',
-    seatingCapacity: 7,
-    dailyRate: 4500,
-    renterName: 'Metro Car Hub',
-    trustBadge: 'VERIFIED',
-    averageRating: 4.9,
-  },
-  {
-    id: '3',
-    make: 'Mitsubishi',
-    model: 'Montero Sport',
-    year: 2022,
-    fuelType: 'DIESEL',
-    transmission: 'Automatic',
-    seatingCapacity: 7,
-    dailyRate: 5500,
-    renterName: 'LuzVisMinda Wheels',
-    trustBadge: 'VERIFIED',
-    averageRating: 4.7,
-  },
-  {
-    id: '4',
-    make: 'BYD',
-    model: 'Atto 3',
-    year: 2024,
-    fuelType: 'ELECTRIC',
-    transmission: 'Automatic',
-    seatingCapacity: 5,
-    dailyRate: 3800,
-    renterName: 'GreenDrive PH',
-    trustBadge: 'UNDER_VALIDATION',
-    averageRating: 4.6,
-  },
-];
-
-const TOP_PARTNERS = [
-  {
-    id: '1',
-    companyName: 'Sunshine Rentals',
-    trustBadge: 'VERIFIED',
-    fleetCount: 24,
-    averageRating: 4.8,
-  },
-  {
-    id: '2',
-    companyName: 'Metro Car Hub',
-    trustBadge: 'VERIFIED',
-    fleetCount: 41,
-    averageRating: 4.9,
-  },
-  {
-    id: '3',
-    companyName: 'LuzVisMinda Wheels',
-    trustBadge: 'VERIFIED',
-    fleetCount: 18,
-    averageRating: 4.7,
-  },
-  {
-    id: '4',
-    companyName: 'GreenDrive PH',
-    trustBadge: 'UNDER_VALIDATION',
-    fleetCount: 6,
-    averageRating: 4.6,
-  },
-  {
-    id: '5',
-    companyName: 'CapitalCity Cars',
-    trustBadge: 'VERIFIED',
-    fleetCount: 33,
-    averageRating: 4.8,
-  },
-  {
-    id: '6',
-    companyName: 'IslandHop Rentals',
-    trustBadge: 'VERIFIED',
-    fleetCount: 12,
-    averageRating: 4.5,
-  },
-];
+export const dynamic = 'force-dynamic';
 
 const HOW_IT_WORKS = [
   {
@@ -158,7 +60,15 @@ const HOW_IT_WORKS = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [vehicleResult, renterResult] = await Promise.all([
+    searchVehicles({ limit: 4 }).catch(() => null),
+    getTopRenters(6).catch(() => null),
+  ]);
+
+  const featuredVehicles = vehicleResult?.data?.data ?? [];
+  const topRenters = renterResult?.data ?? [];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -248,11 +158,37 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURED_VEHICLES.map((vehicle) => (
-              <VehicleCard key={vehicle.id} {...vehicle} />
-            ))}
-          </div>
+          {featuredVehicles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredVehicles.map((v: VehicleWithRenter) => {
+                const images = parseImageUrls(v.imageUrls);
+                return (
+                  <VehicleCard
+                    key={v.id}
+                    id={v.id}
+                    make={v.make}
+                    model={v.model}
+                    year={v.year}
+                    fuelType={v.fuelType}
+                    transmission={v.transmission}
+                    seatingCapacity={v.seatingCapacity}
+                    dailyRate={v.dailyRate}
+                    imageUrl={images[0]}
+                    renterName={v.renter?.companyName}
+                    trustBadge={v.renter?.trustBadge}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-center text-gray-400 py-10">
+              No vehicles available right now.{' '}
+              <Link href="/search" className="text-blue-600 underline">
+                Try searching
+              </Link>
+              .
+            </p>
+          )}
         </div>
       </section>
 
@@ -263,11 +199,15 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold text-gray-900">Top rental partners</h2>
             <p className="mt-2 text-gray-500">Trusted companies with verified fleets</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {TOP_PARTNERS.map((partner) => (
-              <PartnerCard key={partner.id} {...partner} />
-            ))}
-          </div>
+          {topRenters.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {topRenters.map((partner: TopRenter) => (
+                <PartnerCard key={partner.id} {...partner} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-400">No partners listed yet.</p>
+          )}
           <div className="mt-10 text-center">
             <Link href="/become-a-partner">
               <Button variant="secondary" size="lg">
@@ -296,4 +236,14 @@ export default function HomePage() {
       <Footer />
     </div>
   );
+}
+
+function parseImageUrls(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }

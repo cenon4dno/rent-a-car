@@ -1,4 +1,30 @@
-import type { ApiResponse, PaginatedResponse, BaseVehicle } from '@rent-a-car/shared';
+export interface ApiResponse<T> {
+  data: T;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface BaseVehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  plateNumber: string;
+  fuelType: string;
+  transmission: string;
+  seatingCapacity: number;
+  dailyRate: number;
+  mileageLimit?: number | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface VehicleRenter {
   companyName: string;
@@ -58,6 +84,17 @@ export async function searchVehicles(params: VehicleSearchParams) {
   return apiFetch<ApiResponse<PaginatedResponse<VehicleWithRenter>>>(
     `/vehicles${qs ? `?${qs}` : ''}`,
   );
+}
+
+export interface TopRenter {
+  id: string;
+  companyName: string;
+  trustBadge: string;
+  fleetCount: number;
+}
+
+export async function getTopRenters(limit = 6) {
+  return apiFetch<ApiResponse<TopRenter[]>>(`/vehicles/renters?limit=${limit}`);
 }
 
 export async function getVehicle(id: string) {

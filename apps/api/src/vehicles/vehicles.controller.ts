@@ -26,8 +26,8 @@ export class VehiclesController {
 
   @Get()
   @ApiOperation({ summary: 'Search available vehicles with optional date/filter params' })
-  search(@Query() dto: SearchVehicleDto) {
-    return this.vehiclesService.search(dto);
+  async search(@Query() dto: SearchVehicleDto) {
+    return { data: await this.vehiclesService.search(dto) };
   }
 
   @Get('my')
@@ -35,14 +35,20 @@ export class VehiclesController {
   @Roles('RENTER')
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get the authenticated renter's fleet with active booking counts" })
-  findMine(@Request() req: { user: { id: string } }) {
-    return this.vehiclesService.findByRenter(req.user.id);
+  async findMine(@Request() req: { user: { id: string } }) {
+    return { data: await this.vehiclesService.findByRenter(req.user.id) };
+  }
+
+  @Get('renters')
+  @ApiOperation({ summary: 'Get top rental partners for public display (ordered by fleet size)' })
+  async getTopRenters(@Query('limit') limit?: string) {
+    return { data: await this.vehiclesService.getTopRenters(limit ? Number(limit) : 6) };
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get vehicle detail with renter info and recent reviews' })
-  findOne(@Param('id') id: string) {
-    return this.vehiclesService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return { data: await this.vehiclesService.findOne(id) };
   }
 
   @Post()
@@ -50,8 +56,8 @@ export class VehiclesController {
   @Roles('RENTER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Add a vehicle to the renter fleet' })
-  create(@Request() req: { user: { id: string } }, @Body() dto: CreateVehicleDto) {
-    return this.vehiclesService.create(req.user.id, dto);
+  async create(@Request() req: { user: { id: string } }, @Body() dto: CreateVehicleDto) {
+    return { data: await this.vehiclesService.create(req.user.id, dto) };
   }
 
   @Patch(':id')
@@ -59,12 +65,12 @@ export class VehiclesController {
   @Roles('RENTER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update vehicle details or status' })
-  update(
+  async update(
     @Param('id') id: string,
     @Request() req: { user: { id: string } },
     @Body() dto: UpdateVehicleDto,
   ) {
-    return this.vehiclesService.update(id, req.user.id, dto);
+    return { data: await this.vehiclesService.update(id, req.user.id, dto) };
   }
 
   @Delete(':id')
@@ -72,7 +78,7 @@ export class VehiclesController {
   @Roles('RENTER')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Soft-delete a vehicle (sets status to INACTIVE)' })
-  remove(@Param('id') id: string, @Request() req: { user: { id: string } }) {
-    return this.vehiclesService.remove(id, req.user.id);
+  async remove(@Param('id') id: string, @Request() req: { user: { id: string } }) {
+    return { data: await this.vehiclesService.remove(id, req.user.id) };
   }
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Badge } from './Badge';
+import { VehicleImage } from './VehicleImage';
 
 export interface VehicleCardProps {
   id: string;
@@ -49,31 +50,8 @@ export function VehicleCard({
       className="group block rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
       {/* Image */}
-      <div className="relative h-48 bg-gray-100 overflow-hidden">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={`${make} ${model}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zM5 8h4M3 12h18m-2-4h2a1 1 0 011 1v5"
-              />
-            </svg>
-          </div>
-        )}
+      <div className="relative h-48 bg-slate-100 overflow-hidden">
+        <VehicleImage src={imageUrl} alt={`${make} ${model}`} make={make} model={model} />
         <div className="absolute top-2 right-2">
           <Badge label={fuelLabel[fuelType] ?? fuelType} variant="blue" />
         </div>
