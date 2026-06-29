@@ -4,6 +4,7 @@
 
 - [x] [P2] Add email/password login field to the login page alongside SSO buttons — seed default admin account (email: cenon4dno@gmail.com, password stored in ADMIN_SEED_PASSWORD env var); backend: POST /auth/login with bcrypt password validation; web: CredentialsProvider in NextAuth config — 2026-06-29
 - [ ] [P2] Persistent site header — wrap all pages in a shared layout that renders the Navbar so it persists across navigation without re-mounting; ensure auth state, active route highlight, and responsive menu are consistent on every route
+- [ ] [P3] Redesign the application use tailwind template in tailawesome called Landwind
 - [ ] [P2] Persistent site footer — ensure the Footer component renders on every page via the shared root layout, matching the header's persistence behaviour
 - [ ] [P2] Homepage featured-car carousel — full-width autoplay carousel on the home page showcasing available vehicles with high-res cover photos, a gradient overlay with car name/price/rating badge, a prominent "Rent Now" CTA, smooth slide animation with prev/next arrows, and dot pagination indicators; source vehicles from the live API (`/vehicles?featured=true`) and fall back to top-rated if no featured flag is set
 - [ ] [P2] Driver user group — NestJS DriversModule, driver profiles (public/private), Renter registers drivers, driver schedule, professional license KYC upload, background check clearance field
