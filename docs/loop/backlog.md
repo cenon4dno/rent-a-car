@@ -2,19 +2,20 @@
 
 ## Active
 
-- [ ] [P2] Add email/password login field to the login page alongside SSO buttons — seed default admin account (email: cenon4dno@gmail.com, password stored in ADMIN_SEED_PASSWORD env var); backend: POST /auth/login with bcrypt password validation; web: CredentialsProvider in NextAuth config
+- [x] [P2] Add email/password login field to the login page alongside SSO buttons — seed default admin account (email: cenon4dno@gmail.com, password stored in ADMIN_SEED_PASSWORD env var); backend: POST /auth/login with bcrypt password validation; web: CredentialsProvider in NextAuth config — 2026-06-29
 - [ ] [P2] Driver user group — NestJS DriversModule, driver profiles (public/private), Renter registers drivers, driver schedule, professional license KYC upload, background check clearance field
 - [ ] [P2] Two-way review system — User reviews Car/Driver/Renter post-trip; Renter reviews User; wire into ReviewsModule and display on profiles
 - [ ] [P2] Cancellation/Refund SLA automation — 100% refund if cancelled ≥48h before pickup, 50% if <48h, 0% if <24h; automated refund routing back to original payment method
 - [ ] [P2] Notification system — email/push notifications for booking confirmation, cancellation, late return alerts, payment failure, dispute updates, driver no-show
-- [ ] [P2] Renter public profile page (`/renter/[id]`) — company contact details, fleet list, average ratings, reviews, Trust Badge (Verified / Undergoing Validation / Not Verified)
+- [ ] [P2] Renter public profile page (`/renter/[id]`) — company contact details, fleet list, average ratings, reviews, Trust Badge (Verified / Undergoing Validation / Not Verified); publicly accessible without login
+- [ ] [P2] Car use-case tagging system — add a `tags` field to vehicles (e.g. "Wedding", "House Move", "Airport Transfer", "Road Trip", "Corporate", "Group Tour"); Renter tags vehicles when posting; search/filter page exposes a scenario picker so users select their use case and see only suitable vehicles; tags stored as a string array in Prisma schema, indexed for query performance
 - [ ] [P3] Car comparison feature — users can select up to 3 cars from search results and compare side-by-side (specs, pricing, ratings, add-ons, mileage limits, fuel type, transmission, seating capacity)
 - [ ] [P3] QR code on booking confirmation ticket — generate and display QR code with booking reference number on the Booked confirmation page
 - [ ] [P3] Map integration on booking confirmation — embed map showing exact pickup location on the Booked page and vehicle detail page
 - [ ] [P3] GCash / Maya e-wallet payments — PayMongo Sources API integration for local Philippine e-wallets alongside existing card payment
 - [ ] [P3] Chauffeur add-on booking flow — when chauffeur add-on is selected, allow Renter to assign a registered driver to the booking; show driver details on confirmation ticket
 - [ ] [P3] Customer profile page — visible only to Renters (on booking request), assigned Drivers, and Admins; shows rental history, verified ID status, user ratings
-- [ ] [P3] Driver public profile page — name, photo, number of completed trips, average ratings, and reviews
+- [ ] [P3] Driver public profile page — name, photo, number of completed trips, average ratings, and reviews; publicly accessible without login (`/driver/[id]`)
 - [ ] [P3] Late return penalty charges — automated charge to user's card on file; instant alert to Renter; suggest alternative vehicle from fleet for next affected booking
 - [ ] [P3] Extension payment failure handling — deny extension immediately; notify user to update payment method within 1 hour; mandate immediate return if unpaid
 - [ ] [P3] Driver no-show flow — user reports via app; automated full refund; high-severity penalty flag applied to Renter's profile

@@ -1,5 +1,24 @@
 # Observations Log
 
+## 2026-06-29 — Iteration 18 (Email/Password Login + Home Page Live API)
+
+**Goal:** Add email/password login alongside SSO; seed admin account; wire home page to live API data
+**Outcome:** Done (commits 43439b2, 44e4be6)
+**Findings:**
+
+- `passwordHash String?` already existed on the Prisma `User` model — no migration needed for credentials login.
+- `bcryptjs` was already installed in the API (used by `seed.ts`) — imported directly in `AuthService`.
+- NextAuth v5 credentials flow: `authorize()` calls `POST /auth/login` and returns `{ id, role, apiToken }`. JWT callback branches on `account.provider === 'credentials'` to skip the SSO exchange and copy fields directly.
+- Admin user (`cenon4dno@gmail.com`) added to `seed.ts` using `ADMIN_SEED_PASSWORD` env var (falls back to `'changeme'` in dev). Re-seeded on every `db:seed` run since `deleteMany()` wipes all users.
+- Home page was wired to live API (`searchVehicles`, `getTopRenters`) from static placeholder data. `VehicleImage.tsx` component added to handle image loading with fallback.
+- `seed-clean.ts` utility script added (`db:seed-clean` script) for resetting DB without re-seeding.
+
+**Next Actions:**
+
+- Driver user group — DriversModule, driver profiles, renter registers drivers, professional license KYC
+- Two-way review system — post-trip reviews wired to ReviewsModule and profiles
+- Renter public profile page `/renter/[id]`
+
 ## 2026-06-29 — Iteration 17 (Mobile SSO + Missing Package Fixes)
 
 **Goal:** Add Microsoft and Apple SSO to mobile app; add missing expo packages to package.json
