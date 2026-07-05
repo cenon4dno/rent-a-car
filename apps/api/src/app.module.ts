@@ -13,6 +13,7 @@ import { DisputesModule } from './disputes/disputes.module';
 import { ChatModule } from './chat/chat.module';
 import { DriversModule } from './drivers/drivers.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { KycModule } from './kyc/kyc.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     DisputesModule,
     ChatModule,
     DriversModule,
+    KycModule,
   ],
   controllers: [AppController],
   providers: [AppService],

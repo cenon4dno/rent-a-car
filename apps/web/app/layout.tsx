@@ -4,6 +4,7 @@ import { SessionProvider } from 'next-auth/react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { ChatWidget } from '@/components/ui/ChatWidget';
+import { ComparisonTray } from '@/components/ui/ComparisonTray';
 import './globals.css';
 
 const geistSans = Geist({
@@ -35,6 +36,7 @@ export default function RootLayout({
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
           <ChatWidget />
+          <ComparisonTray />
         </SessionProvider>
       </body>
     </html>

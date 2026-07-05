@@ -118,16 +118,27 @@ export class VehiclesService {
     if (!vehicle) throw new NotFoundException('Vehicle not found');
     if (vehicle.renter.userId !== userId) throw new ForbiddenException();
 
+    const dtoAny = dto as typeof dto & { tags?: string[] };
     return this.prisma.vehicle.update({
       where: { id },
       data: {
-        ...dto,
-        imageUrls: dto.imageUrls ? JSON.stringify(dto.imageUrls) : undefined,
-        vehiclePhotos: dto.vehiclePhotos ? JSON.stringify(dto.vehiclePhotos) : undefined,
-        registrationDocs: dto.registrationDocs ? JSON.stringify(dto.registrationDocs) : undefined,
-        tags: (dto as { tags?: string[] }).tags
-          ? JSON.stringify((dto as { tags?: string[] }).tags)
-          : undefined,
+        make: dto.make,
+        model: dto.model,
+        year: dto.year,
+        plateNumber: dto.plateNumber,
+        description: dto.description,
+        fuelType: dto.fuelType,
+        transmission: dto.transmission,
+        seatingCapacity: dto.seatingCapacity,
+        dailyRate: dto.dailyRate,
+        mileageLimit: dto.mileageLimit,
+        status: dto.status,
+        imageUrls: dto.imageUrls !== undefined ? JSON.stringify(dto.imageUrls) : undefined,
+        vehiclePhotos:
+          dto.vehiclePhotos !== undefined ? JSON.stringify(dto.vehiclePhotos) : undefined,
+        registrationDocs:
+          dto.registrationDocs !== undefined ? JSON.stringify(dto.registrationDocs) : undefined,
+        tags: dtoAny.tags !== undefined ? JSON.stringify(dtoAny.tags) : undefined,
       },
     });
   }
@@ -297,6 +308,83 @@ export class VehiclesService {
       topVehicles: vehicleRevenue.slice(0, 5),
       monthlyRevenue: months,
       maintenanceForecast,
+    };
+  }
+
+  async getCustomerDemographics(userId: string) {
+    const renterProfile = await this.prisma.renterProfile.findUnique({ where: { userId } });
+    if (!renterProfile) return null;
+
+    const bookings = await this.prisma.booking.findMany({
+      where: { renterId: renterProfile.id, status: { in: ['COMPLETED', 'ACTIVE'] } },
+      include: {
+        customer: {
+          include: {
+            user: { select: { createdAt: true } },
+          },
+        },
+      },
+    });
+
+    // KYC status breakdown
+    const kycMap: Record<string, number> = {};
+    const seenCustomers = new Set<string>();
+    const bookingsPerCustomer: Record<string, number> = {};
+    const repeatCustomerIds = new Set<string>();
+
+    for (const b of bookings) {
+      const cid = b.customerId;
+      const kyc = b.customer.kycStatus;
+      if (!seenCustomers.has(cid)) {
+        kycMap[kyc] = (kycMap[kyc] ?? 0) + 1;
+        seenCustomers.add(cid);
+      }
+      bookingsPerCustomer[cid] = (bookingsPerCustomer[cid] ?? 0) + 1;
+    }
+
+    for (const [cid, count] of Object.entries(bookingsPerCustomer)) {
+      if (count > 1) repeatCustomerIds.add(cid);
+    }
+
+    const totalCustomers = seenCustomers.size;
+    const repeatCustomers = repeatCustomerIds.size;
+    const newCustomers = totalCustomers - repeatCustomers;
+
+    // Monthly new customers (last 6 months) — by first booking date with this renter
+    const now = new Date();
+    const firstBookingByCustomer: Record<string, Date> = {};
+    for (const b of bookings) {
+      const d = new Date(b.createdAt);
+      if (!firstBookingByCustomer[b.customerId] || d < firstBookingByCustomer[b.customerId]) {
+        firstBookingByCustomer[b.customerId] = d;
+      }
+    }
+
+    const monthlyNew: { label: string; count: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const label = start.toLocaleString('en-PH', { month: 'short', year: '2-digit' });
+      const count = Object.values(firstBookingByCustomer).filter(
+        (d) => d >= start && d < end,
+      ).length;
+      monthlyNew.push({ label, count });
+    }
+
+    // Top customers by booking count
+    const topCustomers = Object.entries(bookingsPerCustomer)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([customerId, count]) => ({ customerId, bookings: count }));
+
+    return {
+      totalCustomers,
+      repeatCustomers,
+      newCustomers,
+      repeatRate: totalCustomers > 0 ? Math.round((repeatCustomers / totalCustomers) * 100) : 0,
+      kycBreakdown: Object.entries(kycMap).map(([status, count]) => ({ status, count })),
+      monthlyNewCustomers: monthlyNew,
+      topCustomers,
     };
   }
 

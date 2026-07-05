@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import { getFleetAnalytics } from '@/lib/api';
+import { getFleetAnalytics, getCustomerDemographics } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,8 +8,12 @@ export default async function RenterAnalyticsPage() {
   const session = await auth();
   if (!session?.apiToken) redirect('/login');
 
-  const res = await getFleetAnalytics(session.apiToken).catch(() => null);
+  const [res, demoRes] = await Promise.all([
+    getFleetAnalytics(session.apiToken).catch(() => null),
+    getCustomerDemographics(session.apiToken).catch(() => null),
+  ]);
   const data = res?.data;
+  const demo = demoRes?.data;
 
   if (!data) {
     return (
@@ -139,6 +143,102 @@ export default async function RenterAnalyticsPage() {
           {data.utilizationRate >= 80 && ' High utilization — consider expanding your fleet.'}
         </p>
       </div>
+
+      {/* Customer demographics */}
+      {demo && (
+        <>
+          <h2 className="text-xl font-bold text-gray-900 pt-2">Customer Demographics</h2>
+
+          {/* KPI row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard
+              label="Total Customers"
+              value={demo.totalCustomers}
+              sub="unique customers served"
+            />
+            <KpiCard
+              label="Repeat Customers"
+              value={demo.repeatCustomers}
+              sub="booked more than once"
+              accent="blue"
+            />
+            <KpiCard label="New Customers" value={demo.newCustomers} sub="booked only once" />
+            <KpiCard
+              label="Repeat Rate"
+              value={`${demo.repeatRate}%`}
+              sub="of customers returned"
+              accent={demo.repeatRate >= 40 ? 'green' : demo.repeatRate >= 20 ? 'yellow' : 'red'}
+            />
+          </div>
+
+          {/* Monthly new customers chart */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">
+              New Customers per Month (last 6 months)
+            </h3>
+            {(() => {
+              const maxC = Math.max(...demo.monthlyNewCustomers.map((m) => m.count), 1);
+              return (
+                <div className="flex items-end gap-3 h-32">
+                  {demo.monthlyNewCustomers.map((m) => {
+                    const pct = (m.count / maxC) * 100;
+                    return (
+                      <div key={m.label} className="flex-1 flex flex-col items-center gap-2">
+                        <span className="text-xs text-gray-500 font-medium">
+                          {m.count > 0 ? m.count : '—'}
+                        </span>
+                        <div className="w-full bg-gray-100 rounded-t-md" style={{ height: '100%' }}>
+                          <div
+                            className="w-full bg-purple-500 rounded-t-md transition-all"
+                            style={{ height: `${Math.max(pct, m.count > 0 ? 4 : 0)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400">{m.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* KYC breakdown */}
+          {demo.kycBreakdown.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+                KYC Verification Status
+              </h3>
+              <div className="flex flex-col gap-3">
+                {demo.kycBreakdown.map((k) => {
+                  const pct = demo.totalCustomers > 0 ? (k.count / demo.totalCustomers) * 100 : 0;
+                  const kycColor: Record<string, string> = {
+                    VERIFIED: 'bg-green-500',
+                    UNDER_REVIEW: 'bg-yellow-400',
+                    PENDING: 'bg-gray-300',
+                    REJECTED: 'bg-red-400',
+                  };
+                  return (
+                    <div key={k.status}>
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>{k.status.replace('_', ' ')}</span>
+                        <span>
+                          {k.count} ({pct.toFixed(0)}%)
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-100 rounded-full">
+                        <div
+                          className={`h-full rounded-full ${kycColor[k.status] ?? 'bg-blue-400'}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Maintenance forecast */}
       {data.maintenanceForecast && data.maintenanceForecast.length > 0 && (

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Badge } from './Badge';
 import { VehicleImage } from './VehicleImage';
+import { CompareButton } from './CompareButton';
 
 export interface VehicleCardProps {
   id: string;
@@ -55,6 +56,7 @@ export function VehicleCard({
         <div className="absolute top-2 right-2">
           <Badge label={fuelLabel[fuelType] ?? fuelType} variant="blue" />
         </div>
+        <CompareButton vehicle={{ id, make, model, year, imageUrl }} />
       </div>
 
       {/* Details */}

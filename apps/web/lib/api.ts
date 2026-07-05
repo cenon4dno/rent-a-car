@@ -83,8 +83,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000';
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}/api/v1${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -623,6 +623,25 @@ export interface CustomerProfileDetail {
 
 export async function getCustomerProfile(customerProfileId: string, token: string) {
   return apiFetch<ApiResponse<CustomerProfileDetail>>(`/users/customers/${customerProfileId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+// ─── Fleet demographics ───────────────────────────────────────────────────────
+
+export interface CustomerDemographics {
+  totalCustomers: number;
+  repeatCustomers: number;
+  newCustomers: number;
+  repeatRate: number;
+  kycBreakdown: Array<{ status: string; count: number }>;
+  monthlyNewCustomers: Array<{ label: string; count: number }>;
+  topCustomers: Array<{ customerId: string; bookings: number }>;
+}
+
+export async function getCustomerDemographics(token: string) {
+  return apiFetch<ApiResponse<CustomerDemographics>>(`/vehicles/my/demographics`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: 'no-store',
   });
