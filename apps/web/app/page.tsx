@@ -4,7 +4,13 @@ import { VehicleCard } from '@/components/ui/VehicleCard';
 import { PartnerCard } from '@/components/ui/PartnerCard';
 import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel';
 import { Button } from '@/components/ui/Button';
-import { searchVehicles, getTopRenters, type VehicleWithRenter, type TopRenter } from '@/lib/api';
+import {
+  searchVehicles,
+  getTopRenters,
+  getPrimaryImage,
+  type VehicleWithRenter,
+  type TopRenter,
+} from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -162,25 +168,22 @@ export default async function HomePage() {
           </div>
           {gridVehicles.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {gridVehicles.map((v: VehicleWithRenter) => {
-                const images = parseImageUrls(v.imageUrls);
-                return (
-                  <VehicleCard
-                    key={v.id}
-                    id={v.id}
-                    make={v.make}
-                    model={v.model}
-                    year={v.year}
-                    fuelType={v.fuelType}
-                    transmission={v.transmission}
-                    seatingCapacity={v.seatingCapacity}
-                    dailyRate={v.dailyRate}
-                    imageUrl={images[0]}
-                    renterName={v.renter?.companyName}
-                    trustBadge={v.renter?.trustBadge}
-                  />
-                );
-              })}
+              {gridVehicles.map((v: VehicleWithRenter) => (
+                <VehicleCard
+                  key={v.id}
+                  id={v.id}
+                  make={v.make}
+                  model={v.model}
+                  year={v.year}
+                  fuelType={v.fuelType}
+                  transmission={v.transmission}
+                  seatingCapacity={v.seatingCapacity}
+                  dailyRate={v.dailyRate}
+                  imageUrl={getPrimaryImage(v.imageUrls, v.vehiclePhotos)}
+                  renterName={v.renter?.companyName}
+                  trustBadge={v.renter?.trustBadge}
+                />
+              ))}
             </div>
           ) : (
             <p className="text-center text-gray-400 py-10">
@@ -236,14 +239,4 @@ export default async function HomePage() {
       </section>
     </>
   );
-}
-
-function parseImageUrls(raw: string | null | undefined): string[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
 }

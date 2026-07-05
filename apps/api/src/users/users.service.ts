@@ -93,4 +93,51 @@ export class UsersService {
     if (existing) return existing;
     return this.prisma.customerProfile.create({ data: { userId } });
   }
+
+  async getCustomerProfile(customerProfileId: string, requestingUserId: string) {
+    const requesting = await this.prisma.user.findUnique({
+      where: { id: requestingUserId },
+      include: { renterProfile: true },
+    });
+
+    const isAdmin = requesting?.role === 'ADMIN';
+    const isRenter = requesting?.role === 'RENTER';
+
+    if (!isAdmin && !isRenter) {
+      throw new Error('Forbidden');
+    }
+
+    const profile = await this.prisma.customerProfile.findUnique({
+      where: { id: customerProfileId },
+      include: {
+        user: { select: { id: true, name: true, email: true, avatarUrl: true, kycStatus: true } },
+        bookings: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: {
+            vehicle: { select: { make: true, model: true, year: true } },
+          },
+        },
+        reviews: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+      },
+    });
+
+    if (!profile) return null;
+
+    const renterReviews = await this.prisma.renterReview.findMany({
+      where: { customerId: customerProfileId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    const avgRating =
+      renterReviews.length > 0
+        ? renterReviews.reduce((sum, r) => sum + r.rating, 0) / renterReviews.length
+        : null;
+
+    return { ...profile, renterReviews, averageRating: avgRating };
+  }
 }

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { auth } from '@/auth';
 import { getAdminUsers } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
@@ -50,7 +51,16 @@ export default async function AdminUsersPage() {
             {users.map((u) => (
               <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3">
-                  <p className="font-medium text-gray-900">{u.name}</p>
+                  {u.customerProfile ? (
+                    <Link
+                      href={`/customer/${u.customerProfile.id}`}
+                      className="font-medium text-blue-600 hover:underline"
+                    >
+                      {u.name}
+                    </Link>
+                  ) : (
+                    <p className="font-medium text-gray-900">{u.name}</p>
+                  )}
                   <p className="text-xs text-gray-400">{u.email}</p>
                   {u.renterProfile && (
                     <p className="text-xs text-blue-500 mt-0.5">{u.renterProfile.companyName}</p>

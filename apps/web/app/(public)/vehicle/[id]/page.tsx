@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getVehicle } from '@/lib/api';
+import { getVehicle, parseVehiclePhotos } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { BookingForm } from './BookingForm';
 
@@ -29,7 +29,9 @@ export default async function VehiclePage({ params, searchParams }: VehiclePageP
   if (!result?.data) notFound();
 
   const v = result.data;
-  const images = parseImageUrls(v.imageUrls);
+  const photos = parseVehiclePhotos(v.vehiclePhotos);
+  const hasPhotos = !!(photos.front || photos.back || photos.side || photos.interior);
+  const legacyImages = parseImageUrlsLocal(v.imageUrls);
   const avgRating =
     v.reviews.length > 0
       ? v.reviews.reduce((sum, r) => sum + r.rating, 0) / v.reviews.length
@@ -54,14 +56,51 @@ export default async function VehiclePage({ params, searchParams }: VehiclePageP
           <div className="lg:col-span-2 space-y-6">
             {/* Image gallery */}
             <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-              {images.length > 0 ? (
+              {hasPhotos ? (
+                <div className="grid grid-cols-3 gap-px bg-gray-200">
+                  {/* Front — spans full width */}
+                  {photos.front && (
+                    <div className="col-span-3 relative">
+                      <img
+                        src={photos.front}
+                        alt={`${v.make} ${v.model} — front`}
+                        className="w-full h-72 object-cover"
+                      />
+                      <span className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full backdrop-blur-sm">
+                        Front
+                      </span>
+                    </div>
+                  )}
+                  {/* Back, Side, Interior thumbnails */}
+                  {(
+                    [
+                      { key: 'back' as const, label: 'Rear' },
+                      { key: 'side' as const, label: 'Side' },
+                      { key: 'interior' as const, label: 'Interior' },
+                    ] as const
+                  ).map(({ key, label }) =>
+                    photos[key] ? (
+                      <div key={key} className="relative">
+                        <img
+                          src={photos[key]}
+                          alt={`${v.make} ${v.model} — ${label.toLowerCase()}`}
+                          className="w-full h-36 object-cover"
+                        />
+                        <span className="absolute bottom-1.5 left-1.5 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full backdrop-blur-sm">
+                          {label}
+                        </span>
+                      </div>
+                    ) : null,
+                  )}
+                </div>
+              ) : legacyImages.length > 0 ? (
                 <div className="grid grid-cols-2 gap-1">
                   <img
-                    src={images[0]}
+                    src={legacyImages[0]}
                     alt={`${v.make} ${v.model}`}
                     className="col-span-2 w-full h-72 object-cover"
                   />
-                  {images.slice(1, 3).map((url, i) => (
+                  {legacyImages.slice(1, 3).map((url: string, i: number) => (
                     <img
                       key={i}
                       src={url}
@@ -217,11 +256,11 @@ function Spec({ label, value }: { label: string; value: string }) {
   );
 }
 
-function parseImageUrls(raw: string | null | undefined): string[] {
+function parseImageUrlsLocal(raw: string | null | undefined): string[] {
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const p = JSON.parse(raw);
+    return Array.isArray(p) ? p : [];
   } catch {
     return [];
   }

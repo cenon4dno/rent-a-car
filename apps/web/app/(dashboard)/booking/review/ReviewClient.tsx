@@ -224,7 +224,7 @@ export function ReviewClient({
       </Button>
 
       <p className="text-xs text-center text-gray-400">
-        Payment is simulated — no real charges will be made.
+        GCash and Maya redirect to PayMongo checkout. Cards are processed securely.
       </p>
     </div>
   );

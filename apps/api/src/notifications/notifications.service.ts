@@ -177,4 +177,77 @@ export class NotificationsService {
     `;
     await this.send(opts.to, subject, html);
   }
+
+  async sendDriverNoShowRenterPenalty(opts: {
+    to: string;
+    renterName: string;
+    vehicleName: string;
+    referenceNumber: string;
+  }) {
+    const subject = `[ACTION REQUIRED] Driver No-Show Penalty — ${opts.referenceNumber}`;
+    const html = `
+      <h2>Driver No-Show — Penalty Applied</h2>
+      <p>Hi ${opts.renterName},</p>
+      <p>A driver no-show was reported for booking <strong>${opts.referenceNumber}</strong> (${opts.vehicleName}). A full refund has been issued to the customer.</p>
+      <p>A <strong>high-severity penalty flag</strong> has been applied to your company profile. Repeated violations may result in account suspension. Please review your driver assignments and contact support to resolve this matter.</p>
+      <p>— RentACar Team</p>
+    `;
+    await this.send(opts.to, subject, html);
+  }
+
+  async sendLateReturnPenaltyCharge(opts: {
+    to: string;
+    customerName: string;
+    vehicleName: string;
+    referenceNumber: string;
+    penaltyAmount: number;
+    extraDays: number;
+  }) {
+    const subject = `Late Return Penalty Charge — ${opts.referenceNumber}`;
+    const html = `
+      <h2>Late Return — Penalty Applied</h2>
+      <p>Hi ${opts.customerName},</p>
+      <p>Your rental of <strong>${opts.vehicleName}</strong> (booking: ${opts.referenceNumber}) was returned ${opts.extraDays} day(s) late.</p>
+      <p>A late penalty of <strong>₱${opts.penaltyAmount.toLocaleString()}</strong> has been charged to your card on file (1.5× daily rate per extra day).</p>
+      <p>If you believe this is an error, please contact our support team.</p>
+      <p>— RentACar Team</p>
+    `;
+    await this.send(opts.to, subject, html);
+  }
+
+  async sendExtensionPaymentFailure(opts: {
+    to: string;
+    customerName: string;
+    vehicleName: string;
+    referenceNumber: string;
+  }) {
+    const subject = `Extension Payment Failed — ${opts.referenceNumber}`;
+    const html = `
+      <h2>Extension Request Denied — Payment Failed</h2>
+      <p>Hi ${opts.customerName},</p>
+      <p>Your extension request for <strong>${opts.vehicleName}</strong> (booking: ${opts.referenceNumber}) could not be processed due to a payment failure.</p>
+      <p><strong>Please update your payment method within 1 hour</strong> or arrange to return the vehicle immediately.</p>
+      <p>— RentACar Team</p>
+    `;
+    await this.send(opts.to, subject, html);
+  }
+
+  async sendSosAlert(opts: {
+    to: string;
+    name: string;
+    vehicleName: string;
+    referenceNumber: string;
+    pickupLocation: string;
+  }) {
+    const subject = `[SOS] Vehicle Breakdown Reported — ${opts.referenceNumber}`;
+    const html = `
+      <h2>SOS — Vehicle Breakdown</h2>
+      <p>Hi ${opts.name},</p>
+      <p>A breakdown has been reported for <strong>${opts.vehicleName}</strong> (booking: ${opts.referenceNumber}).</p>
+      <p><strong>Last known location:</strong> ${opts.pickupLocation}</p>
+      <p>Please arrange assistance immediately. The rental timer has been paused.</p>
+      <p>— RentACar Team</p>
+    `;
+    await this.send(opts.to, subject, html);
+  }
 }

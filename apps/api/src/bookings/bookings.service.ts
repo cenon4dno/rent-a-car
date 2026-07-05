@@ -186,8 +186,164 @@ export class BookingsService {
     };
   }
 
+  async assignDriver(bookingId: string, driverProfileId: string, renterUserId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { renter: true },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.renter.userId !== renterUserId) throw new ForbiddenException();
+
+    const driver = await this.prisma.driverProfile.findUnique({
+      where: { id: driverProfileId },
+    });
+    if (!driver || driver.renterId !== booking.renterId) {
+      throw new ForbiddenException('Driver does not belong to your fleet');
+    }
+
+    return this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { driverId: driverProfileId },
+      include: { driver: { include: { user: true } } },
+    });
+  }
+
   async complete(id: string, renterId: string) {
     return this.updateStatus(id, BookingStatus.COMPLETED, renterId, 'RENTER');
+  }
+
+  async reportDriverNoShow(bookingId: string, customerUserId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        customer: { include: { user: true } },
+        renter: { include: { user: true } },
+        vehicle: true,
+        payment: true,
+      },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.customer.userId !== customerUserId) throw new ForbiddenException();
+    if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+      throw new BadRequestException(
+        'Driver no-show can only be reported for pending/confirmed bookings',
+      );
+    }
+
+    const ref = `RAC-${booking.id.toUpperCase().slice(0, 8)}`;
+    const vehicleName = `${booking.vehicle.make} ${booking.vehicle.model}`;
+
+    await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
+    if (booking.payment?.status === 'PAID') {
+      await this.prisma.payment.update({
+        where: { bookingId },
+        data: { status: 'REFUNDED', refundedAt: new Date() },
+      });
+    }
+
+    // High-severity penalty flag on renter profile
+    await this.prisma.renterProfile.update({
+      where: { id: booking.renterId },
+      data: { penaltyFlags: { increment: 1 } },
+    });
+
+    void this.notifications.sendDriverNoShow({
+      to: booking.customer.user.email,
+      customerName: booking.customer.user.name,
+      vehicleName,
+      referenceNumber: ref,
+    });
+    void this.notifications.sendDriverNoShowRenterPenalty({
+      to: booking.renter.user.email,
+      renterName: booking.renter.user.name,
+      vehicleName,
+      referenceNumber: ref,
+    });
+
+    return { bookingId, status: BookingStatus.CANCELLED, refunded: true };
+  }
+
+  async reportLateReturn(bookingId: string, renterUserId: string, extraDays: number) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        customer: { include: { user: true } },
+        renter: { include: { user: true } },
+        vehicle: true,
+      },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.renter.userId !== renterUserId) throw new ForbiddenException();
+    if (booking.status !== 'ACTIVE') {
+      throw new BadRequestException('Late return can only be reported for active bookings');
+    }
+
+    const penaltyAmount = Math.round(booking.dailyRate * 1.5 * extraDays);
+    const ref = `RAC-${booking.id.toUpperCase().slice(0, 8)}`;
+    const vehicleName = `${booking.vehicle.make} ${booking.vehicle.model}`;
+
+    void this.notifications.sendLateReturnAlert({
+      to: booking.renter.user.email,
+      renterName: booking.renter.user.name,
+      vehicleName,
+      referenceNumber: ref,
+      endDate: booking.endDate,
+    });
+    void this.notifications.sendLateReturnPenaltyCharge({
+      to: booking.customer.user.email,
+      customerName: booking.customer.user.name,
+      vehicleName,
+      referenceNumber: ref,
+      penaltyAmount,
+      extraDays,
+    });
+
+    return { bookingId, penaltyAmount, extraDays };
+  }
+
+  async reportSos(bookingId: string, customerUserId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        customer: { include: { user: true } },
+        renter: { include: { user: true } },
+        vehicle: true,
+      },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.customer.userId !== customerUserId) throw new ForbiddenException();
+    if (booking.status !== 'ACTIVE') {
+      throw new BadRequestException('SOS can only be triggered for active bookings');
+    }
+
+    const ref = `RAC-${booking.id.toUpperCase().slice(0, 8)}`;
+    const vehicleName = `${booking.vehicle.make} ${booking.vehicle.model}`;
+
+    void this.notifications.sendSosAlert({
+      to: booking.renter.user.email,
+      name: booking.renter.user.name,
+      vehicleName,
+      referenceNumber: ref,
+      pickupLocation: booking.pickupLocation,
+    });
+
+    // Also alert admins
+    const admins = await this.prisma.user.findMany({ where: { role: 'ADMIN' } });
+    for (const admin of admins) {
+      void this.notifications.sendSosAlert({
+        to: admin.email,
+        name: admin.name,
+        vehicleName,
+        referenceNumber: ref,
+        pickupLocation: booking.pickupLocation,
+      });
+    }
+
+    return { bookingId, sosFired: true };
   }
 
   private async updateStatus(id: string, status: BookingStatus, userId: string, role: string) {

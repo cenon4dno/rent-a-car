@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { searchVehicles } from '@/lib/api';
+import { searchVehicles, getPrimaryImage } from '@/lib/api';
 import { VehicleCard } from '@/components/ui/VehicleCard';
 import { FilterSidebar } from '@/components/ui/FilterSidebar';
 import { Pagination } from '@/components/ui/Pagination';
@@ -84,25 +84,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {vehicles.map((v) => {
-                    const images = parseImageUrls(v.imageUrls);
-                    return (
-                      <VehicleCard
-                        key={v.id}
-                        id={v.id}
-                        make={v.make}
-                        model={v.model}
-                        year={v.year}
-                        fuelType={v.fuelType}
-                        transmission={v.transmission}
-                        seatingCapacity={v.seatingCapacity}
-                        dailyRate={v.dailyRate}
-                        imageUrl={images[0]}
-                        renterName={v.renter?.companyName}
-                        trustBadge={v.renter?.trustBadge}
-                      />
-                    );
-                  })}
+                  {vehicles.map((v) => (
+                    <VehicleCard
+                      key={v.id}
+                      id={v.id}
+                      make={v.make}
+                      model={v.model}
+                      year={v.year}
+                      fuelType={v.fuelType}
+                      transmission={v.transmission}
+                      seatingCapacity={v.seatingCapacity}
+                      dailyRate={v.dailyRate}
+                      imageUrl={getPrimaryImage(v.imageUrls, v.vehiclePhotos)}
+                      renterName={v.renter?.companyName}
+                      trustBadge={v.renter?.trustBadge}
+                    />
+                  ))}
                 </div>
 
                 {totalPages > 1 && (
@@ -158,14 +155,4 @@ function EmptyState({ apiDown }: { apiDown: boolean }) {
       )}
     </div>
   );
-}
-
-function parseImageUrls(raw: string | null | undefined): string[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
 }

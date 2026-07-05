@@ -2,20 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import type { VehicleWithRenter } from '@/lib/api';
+import { getPrimaryImage, type VehicleWithRenter } from '@/lib/api';
 
 interface FeaturedCarouselProps {
   vehicles: VehicleWithRenter[];
-}
-
-function parseImageUrls(raw: string | null | undefined): string[] {
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
 }
 
 export function FeaturedCarousel({ vehicles }: FeaturedCarouselProps) {
@@ -45,16 +35,16 @@ export function FeaturedCarousel({ vehicles }: FeaturedCarouselProps) {
     >
       {/* Slide images */}
       {vehicles.map((v, i) => {
-        const imgs = parseImageUrls(v.imageUrls);
+        const primaryImg = getPrimaryImage(v.imageUrls, v.vehiclePhotos);
         return (
           <div
             key={v.id}
             className="absolute inset-0 transition-opacity duration-700"
             style={{ opacity: i === current ? 1 : 0 }}
           >
-            {imgs[0] ? (
+            {primaryImg ? (
               <img
-                src={imgs[0]}
+                src={primaryImg}
                 alt={`${v.make} ${v.model}`}
                 className="w-full h-full object-cover"
               />

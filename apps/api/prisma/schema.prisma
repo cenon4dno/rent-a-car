@@ -1,6 +1,3 @@
-// Rent-a-Car — Prisma schema
-// Dev: SQLite | Prod: PostgreSQL (switch provider + DATABASE_URL)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -63,15 +60,15 @@ enum BookingStatus {
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String
-  avatarUrl    String?
-  role         UserRole  @default(CUSTOMER)
-  kycStatus    KycStatus @default(PENDING)
-  passwordHash String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String
+  avatarUrl       String?
+  role            UserRole         @default(CUSTOMER)
+  kycStatus       KycStatus        @default(PENDING)
+  passwordHash    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   renterProfile   RenterProfile?
   driverProfile   DriverProfile?
@@ -99,6 +96,7 @@ model RenterProfile {
   bankAccountDetails String?
   trustBadge         TrustBadge @default(NOT_VERIFIED)
   commissionRate     Float      @default(0.05)
+  penaltyFlags       Int        @default(0)
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
 
@@ -108,27 +106,27 @@ model RenterProfile {
 }
 
 model DriverProfile {
-  id               String    @id @default(cuid())
-  userId           String    @unique
-  renterId         String
-  licenseUrl       String?
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  renterId           String
+  licenseUrl         String?
   backgroundCheckUrl String?
-  kycStatus        KycStatus @default(PENDING)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  kycStatus          KycStatus @default(PENDING)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings Booking[]
 }
 
 model CustomerProfile {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  licenseUrl      String?
-  secondaryIdUrl  String?
-  kycStatus       KycStatus @default(PENDING)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  licenseUrl     String?
+  secondaryIdUrl String?
+  kycStatus      KycStatus @default(PENDING)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings Booking[]
@@ -149,6 +147,8 @@ model Vehicle {
   dailyRate        Float
   mileageLimit     Int?
   imageUrls        String           @default("[]")
+  vehiclePhotos    String           @default("{}")
+  registrationDocs String           @default("{}")
   tags             String           @default("[]")
   status           VehicleStatus    @default(AVAILABLE)
   createdAt        DateTime         @default(now())
@@ -198,17 +198,17 @@ model Booking {
 }
 
 model Payment {
-  id            String   @id @default(cuid())
-  bookingId     String   @unique
+  id            String    @id @default(cuid())
+  bookingId     String    @unique
   amount        Float
-  currency      String   @default("PHP")
+  currency      String    @default("PHP")
   provider      String
   providerRef   String?
-  status        String   @default("PENDING")
+  status        String    @default("PENDING")
   paidAt        DateTime?
   refundedAt    DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 }
@@ -256,5 +256,14 @@ model KnowledgeBase {
   question  String
   answer    String
   keywords  String
+  createdAt DateTime @default(now())
+}
+
+model LegalPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String
+  updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 }

@@ -83,6 +83,77 @@ export default async function AdminOverviewPage() {
             </div>
           </div>
 
+          {/* Renter acquisition + Platform health */}
+          {(stats.renterAcquisition || stats.platformHealth) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {stats.renterAcquisition && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                  <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+                    Renter Acquisition (last 6 months)
+                  </h2>
+                  <div className="flex items-end gap-2 h-24">
+                    {stats.renterAcquisition.map((m) => {
+                      const max = Math.max(...stats.renterAcquisition!.map((x) => x.count), 1);
+                      const pct = (m.count / max) * 100;
+                      return (
+                        <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
+                          <span className="text-xs text-gray-500">
+                            {m.count > 0 ? m.count : ''}
+                          </span>
+                          <div
+                            className="w-full bg-gray-100 rounded-t-sm"
+                            style={{ height: '100%' }}
+                          >
+                            <div
+                              className="w-full bg-green-500 rounded-t-sm"
+                              style={{ height: `${Math.max(pct, m.count > 0 ? 8 : 0)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-400">{m.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {stats.platformHealth && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                  <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+                    Platform Health
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600">Cancellation Rate</span>
+                        <span
+                          className={`font-semibold ${stats.platformHealth.cancellationRate < 10 ? 'text-green-600' : stats.platformHealth.cancellationRate < 25 ? 'text-yellow-600' : 'text-red-600'}`}
+                        >
+                          {stats.platformHealth.cancellationRate}%
+                        </span>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full">
+                        <div
+                          className={`h-full rounded-full ${stats.platformHealth.cancellationRate < 10 ? 'bg-green-500' : stats.platformHealth.cancellationRate < 25 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                          style={{
+                            width: `${Math.min(stats.platformHealth.cancellationRate, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-gray-100">
+                      <p className="text-xs text-gray-400">
+                        Total bookings processed:{' '}
+                        <span className="font-semibold text-gray-700">
+                          {stats.platformHealth.totalBookings.toLocaleString()}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Recent bookings */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
             <div className="px-6 py-4 border-b border-gray-100">

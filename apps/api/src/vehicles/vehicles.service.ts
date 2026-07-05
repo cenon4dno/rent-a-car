@@ -18,6 +18,8 @@ export class VehiclesService {
       data: {
         ...dto,
         imageUrls: JSON.stringify(dto.imageUrls ?? []),
+        vehiclePhotos: JSON.stringify(dto.vehiclePhotos ?? {}),
+        registrationDocs: JSON.stringify(dto.registrationDocs ?? {}),
         tags: JSON.stringify(dto.tags ?? []),
         renterId: renterProfile.id,
       },
@@ -121,6 +123,8 @@ export class VehiclesService {
       data: {
         ...dto,
         imageUrls: dto.imageUrls ? JSON.stringify(dto.imageUrls) : undefined,
+        vehiclePhotos: dto.vehiclePhotos ? JSON.stringify(dto.vehiclePhotos) : undefined,
+        registrationDocs: dto.registrationDocs ? JSON.stringify(dto.registrationDocs) : undefined,
         tags: (dto as { tags?: string[] }).tags
           ? JSON.stringify((dto as { tags?: string[] }).tags)
           : undefined,
@@ -162,6 +166,7 @@ export class VehiclesService {
             seatingCapacity: true,
             dailyRate: true,
             imageUrls: true,
+            vehiclePhotos: true,
             status: true,
             reviews: { select: { rating: true } },
             _count: { select: { reviews: true } },
@@ -189,6 +194,109 @@ export class VehiclesService {
           ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
           : null,
       })),
+    };
+  }
+
+  async getFleetAnalytics(userId: string) {
+    const renterProfile = await this.prisma.renterProfile.findUnique({ where: { userId } });
+    if (!renterProfile) return null;
+
+    const vehicles = await this.prisma.vehicle.findMany({
+      where: { renterId: renterProfile.id },
+      include: {
+        bookings: {
+          select: { status: true, totalAmount: true, startDate: true, endDate: true },
+        },
+        _count: { select: { reviews: true } },
+      },
+    });
+
+    const now = new Date();
+    const totalVehicles = vehicles.length;
+    const activeVehicles = vehicles.filter((v) =>
+      v.bookings.some((b) => b.status === 'ACTIVE'),
+    ).length;
+    const utilizationRate = totalVehicles > 0 ? (activeVehicles / totalVehicles) * 100 : 0;
+
+    // Revenue per vehicle (completed bookings only)
+    const vehicleRevenue = vehicles
+      .map((v) => ({
+        id: v.id,
+        make: v.make,
+        model: v.model,
+        year: v.year,
+        imageUrls: v.imageUrls,
+        status: v.status,
+        totalBookings: v.bookings.filter((b) => b.status !== 'CANCELLED').length,
+        completedBookings: v.bookings.filter((b) => b.status === 'COMPLETED').length,
+        revenue: v.bookings
+          .filter((b) => b.status === 'COMPLETED')
+          .reduce((sum, b) => sum + b.totalAmount, 0),
+        reviewCount: v._count.reviews,
+        currentlyBooked: v.bookings.some(
+          (b) =>
+            b.status === 'ACTIVE' && new Date(b.startDate) <= now && new Date(b.endDate) >= now,
+        ),
+      }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // Monthly revenue for last 6 months
+    const months: { label: string; revenue: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const label = d.toLocaleString('en-PH', { month: 'short', year: '2-digit' });
+      const revenue = vehicles
+        .flatMap((v) => v.bookings)
+        .filter(
+          (b) =>
+            b.status === 'COMPLETED' && new Date(b.startDate) >= d && new Date(b.startDate) < end,
+        )
+        .reduce((sum, b) => sum + b.totalAmount, 0);
+      months.push({ label, revenue });
+    }
+
+    // Maintenance schedule forecasting
+    // Heuristic: every 30 days of total active use → maintenance recommended
+    const MAINTENANCE_INTERVAL_DAYS = 30;
+    const maintenanceForecast = vehicles.map((v) => {
+      const totalUseDays = v.bookings
+        .filter((b) => b.status === 'COMPLETED')
+        .reduce((sum, b) => {
+          const days = Math.ceil(
+            (new Date(b.endDate).getTime() - new Date(b.startDate).getTime()) /
+              (1000 * 60 * 60 * 24),
+          );
+          return sum + days;
+        }, 0);
+      const avgDaysPerMonth = totalUseDays > 0 ? totalUseDays / 6 : 0; // rolling 6-month avg
+      const daysUntilMaintenance = Math.max(
+        0,
+        MAINTENANCE_INTERVAL_DAYS - (totalUseDays % MAINTENANCE_INTERVAL_DAYS),
+      );
+      const weeksUntilMaintenance =
+        avgDaysPerMonth > 0 ? Math.round(daysUntilMaintenance / (avgDaysPerMonth / 4)) : null;
+
+      return {
+        id: v.id,
+        make: v.make,
+        model: v.model,
+        year: v.year,
+        totalUseDays,
+        daysUntilMaintenance,
+        weeksUntilMaintenance,
+        status: v.status,
+        needsMaintenance: daysUntilMaintenance <= 5,
+      };
+    });
+
+    return {
+      totalVehicles,
+      activeVehicles,
+      utilizationRate: Math.round(utilizationRate),
+      topVehicles: vehicleRevenue.slice(0, 5),
+      monthlyRevenue: months,
+      maintenanceForecast,
     };
   }
 

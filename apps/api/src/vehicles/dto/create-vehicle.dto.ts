@@ -52,6 +52,24 @@ export class CreateVehicleDto {
   imageUrls?: string[];
 
   @ApiPropertyOptional({
+    description: 'Vehicle photos: front, back, side, interior (base64 data URLs)',
+  })
+  @IsOptional()
+  vehiclePhotos?: {
+    front?: string;
+    back?: string;
+    side?: string;
+    interior?: string;
+  };
+
+  @ApiPropertyOptional({ description: 'Registration docs: or, cr (base64 data URLs or PDF)' })
+  @IsOptional()
+  registrationDocs?: {
+    or?: string;
+    cr?: string;
+  };
+
+  @ApiPropertyOptional({
     type: [String],
     description: 'Use-case tags e.g. Wedding, Airport Transfer, Road Trip',
     example: ['Wedding', 'Airport Transfer'],

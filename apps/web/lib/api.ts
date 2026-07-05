@@ -22,8 +22,39 @@ export interface BaseVehicle {
   dailyRate: number;
   mileageLimit?: number | null;
   status: string;
+  vehiclePhotos?: string; // JSON-encoded { front, back, side, interior }
+  registrationDocs?: string; // JSON-encoded { or, cr }
   createdAt: string;
   updatedAt: string;
+}
+
+export function parseVehiclePhotos(raw?: string | null): Partial<VehiclePhotos> {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+export function getPrimaryImage(
+  imageUrls?: string | null,
+  vehiclePhotos?: string | null,
+): string | undefined {
+  const photos = parseVehiclePhotos(vehiclePhotos);
+  if (photos.front) return photos.front;
+  const urls = parseImageUrlsArr(imageUrls);
+  return urls[0];
+}
+
+function parseImageUrlsArr(raw?: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export interface VehicleRenter {
@@ -149,6 +180,7 @@ export interface BookingDetail {
   createdAt: string;
   vehicle: BookingVehicle;
   renter?: { companyName: string };
+  customer?: { id: string; user?: { name?: string; email?: string } } | null;
   driver?: { user?: { name?: string }; licenseNumber?: string } | null;
   payment?: BookingPayment | null;
 }
@@ -249,6 +281,18 @@ export interface RenterVehicle extends VehicleWithRenter {
   _count: { reviews: number };
 }
 
+export interface VehiclePhotos {
+  front: string;
+  back: string;
+  side: string;
+  interior: string;
+}
+
+export interface RegistrationDocs {
+  or: string;
+  cr: string;
+}
+
 export interface CreateVehicleBody {
   make: string;
   model: string;
@@ -261,11 +305,49 @@ export interface CreateVehicleBody {
   dailyRate: number;
   mileageLimit?: number;
   imageUrls?: string[];
+  vehiclePhotos?: Partial<VehiclePhotos>;
+  registrationDocs?: Partial<RegistrationDocs>;
   tags?: string[];
 }
 
 export async function getMyVehicles(token: string) {
   return apiFetch<ApiResponse<RenterVehicle[]>>(`/vehicles/my`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+export interface FleetAnalytics {
+  totalVehicles: number;
+  activeVehicles: number;
+  utilizationRate: number;
+  topVehicles: Array<{
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+    revenue: number;
+    completedBookings: number;
+    totalBookings: number;
+    reviewCount: number;
+    currentlyBooked: boolean;
+  }>;
+  monthlyRevenue: Array<{ label: string; revenue: number }>;
+  maintenanceForecast?: Array<{
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+    totalUseDays: number;
+    daysUntilMaintenance: number;
+    weeksUntilMaintenance: number | null;
+    status: string;
+    needsMaintenance: boolean;
+  }>;
+}
+
+export async function getFleetAnalytics(token: string) {
+  return apiFetch<ApiResponse<FleetAnalytics>>(`/vehicles/my/analytics`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: 'no-store',
   });
@@ -314,6 +396,8 @@ export interface AdminStats {
     vehicle: { make: string; model: string };
     renter: { companyName: string };
   }>;
+  renterAcquisition?: Array<{ label: string; count: number }>;
+  platformHealth?: { cancellationRate: number; totalBookings: number };
 }
 
 export interface AdminUser {
@@ -329,6 +413,7 @@ export interface AdminUser {
     trustBadge: string;
     commissionRate: number;
   } | null;
+  customerProfile?: { id: string } | null;
 }
 
 export interface AdminRenter {
@@ -369,6 +454,40 @@ export async function updateRenterCommission(
   return adminFetch<AdminRenter>(`/renters/${renterId}/commission`, token, {
     method: 'PATCH',
     body: JSON.stringify({ commissionRate }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// ─── Legal pages (CMS) ───────────────────────────────────────────────────────
+
+export interface LegalPage {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  updatedAt: string;
+}
+
+export async function getLegalPages() {
+  return apiFetch<LegalPage[]>(`/legal`);
+}
+
+export async function getLegalPage(slug: string) {
+  return apiFetch<LegalPage>(`/legal/${slug}`);
+}
+
+export async function upsertLegalPage(slug: string, title: string, content: string, token: string) {
+  return adminFetch<LegalPage>(`/legal/${slug}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ title, content }),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export async function createLegalPage(slug: string, title: string, content: string, token: string) {
+  return adminFetch<LegalPage>(`/legal`, token, {
+    method: 'POST',
+    body: JSON.stringify({ slug, title, content }),
     headers: { 'Content-Type': 'application/json' },
   });
 }
@@ -472,6 +591,41 @@ export async function deleteDriver(driverProfileId: string, token: string) {
 
 export async function getDriverPublicProfile(id: string) {
   return apiFetch<ApiResponse<DriverPublicProfile>>(`/drivers/${id}`);
+}
+
+// ─── Customer profile ────────────────────────────────────────────────────────
+
+export interface CustomerProfileDetail {
+  id: string;
+  userId: string;
+  kycStatus: string;
+  licenseUrl: string | null;
+  secondaryIdUrl: string | null;
+  averageRating: number | null;
+  user: { id: string; name: string; email: string; avatarUrl: string | null; kycStatus: string };
+  bookings: Array<{
+    id: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+    totalAmount: number;
+    vehicle: { make: string; model: string; year: number };
+  }>;
+  reviews: Array<{ id: string; rating: number; comment: string | null; createdAt: string }>;
+  renterReviews: Array<{
+    id: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+    renterId: string;
+  }>;
+}
+
+export async function getCustomerProfile(customerProfileId: string, token: string) {
+  return apiFetch<ApiResponse<CustomerProfileDetail>>(`/users/customers/${customerProfileId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
 }
 
 // ─── Chat ─────────────────────────────────────────────────────────────────────

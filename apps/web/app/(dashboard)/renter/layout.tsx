@@ -7,6 +7,7 @@ const NAV = [
   { href: '/renter/fleet', label: 'Fleet' },
   { href: '/renter/bookings', label: 'Bookings' },
   { href: '/renter/drivers', label: 'Drivers' },
+  { href: '/renter/analytics', label: 'Analytics' },
 ];
 
 export default async function RenterLayout({ children }: { children: React.ReactNode }) {

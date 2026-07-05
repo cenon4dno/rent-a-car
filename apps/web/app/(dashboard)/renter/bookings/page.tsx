@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { auth } from '@/auth';
 import { getMyBookings } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
@@ -52,9 +53,18 @@ export default async function RenterBookingsPage() {
                     <p className="text-xs text-gray-400">{b.pickupLocation}</p>
                   </td>
                   <td className="px-4 py-3 text-gray-500">
-                    <span className="text-xs font-mono text-gray-400">
-                      {`RAC-${b.id.toUpperCase().slice(0, 8)}`}
-                    </span>
+                    {b.customer ? (
+                      <Link
+                        href={`/customer/${b.customer.id}`}
+                        className="text-sm font-medium text-blue-600 hover:underline"
+                      >
+                        {b.customer.user?.name ?? 'Customer'}
+                      </Link>
+                    ) : (
+                      <span className="text-xs font-mono text-gray-400">
+                        {`RAC-${b.id.toUpperCase().slice(0, 8)}`}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                     {fmt(b.startDate)} &ndash; {fmt(b.endDate)}

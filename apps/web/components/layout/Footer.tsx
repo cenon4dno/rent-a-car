@@ -80,17 +80,17 @@ export function Footer() {
             <h4 className="text-white text-sm font-semibold mb-3">Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/terms" className="hover:text-white transition-colors">
+                <Link href="/legal/terms-of-service" className="hover:text-white transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-white transition-colors">
+                <Link href="/legal/privacy-policy" className="hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white transition-colors">
+                <Link href="/legal/contact-us" className="hover:text-white transition-colors">
                   Contact Us
                 </Link>
               </li>
@@ -98,8 +98,19 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-800 text-sm text-center">
-          © {new Date().getFullYear()} RentACar. All rights reserved. Platform fee: 5%.
+        <div className="mt-8 pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
+          <span>© {new Date().getFullYear()} RentACar. All rights reserved. Platform fee: 5%.</span>
+          <span>
+            Created by{' '}
+            <a
+              href="https://u2i.com"
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+            >
+              u2i
+            </a>
+          </span>
         </div>
       </div>
     </footer>

@@ -50,6 +50,26 @@ export class AdminService {
       }),
     ]);
 
+    // Monthly renter acquisition (last 6 months)
+    const renterAcquisition: { label: string; count: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const label = d.toLocaleString('en-PH', { month: 'short', year: '2-digit' });
+      const count = await this.prisma.renterProfile.count({
+        where: { createdAt: { gte: d, lt: end } },
+      });
+      renterAcquisition.push({ label, count });
+    }
+
+    // Platform health: cancellation rate, dispute rate
+    const totalBookings = Object.values(
+      Object.fromEntries(bookingsByStatus.map((g) => [g.status, g._count.id])),
+    ).reduce((a: number, b) => a + (b as number), 0);
+    const cancelledCount =
+      bookingsByStatus.find((g) => g.status === BookingStatus.CANCELLED)?._count.id ?? 0;
+    const cancellationRate = totalBookings > 0 ? (cancelledCount / totalBookings) * 100 : 0;
+
     return {
       users: Object.fromEntries(usersByRole.map((g) => [g.role, g._count.id])),
       vehicles: Object.fromEntries(vehiclesByStatus.map((g) => [g.status, g._count.id])),
@@ -63,6 +83,11 @@ export class AdminService {
         mtd: commissionMtd._sum.platformFee ?? 0,
       },
       recentBookings,
+      renterAcquisition,
+      platformHealth: {
+        cancellationRate: Math.round(cancellationRate * 10) / 10,
+        totalBookings,
+      },
     };
   }
 
@@ -72,6 +97,7 @@ export class AdminService {
         renterProfile: {
           select: { id: true, companyName: true, trustBadge: true, commissionRate: true },
         },
+        customerProfile: { select: { id: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: 200,
@@ -82,6 +108,24 @@ export class AdminService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     return this.prisma.user.update({ where: { id: userId }, data: { kycStatus } });
+  }
+
+  async getLegalPages() {
+    return this.prisma.legalPage.findMany({ orderBy: { slug: 'asc' } });
+  }
+
+  async getLegalPageBySlug(slug: string) {
+    const page = await this.prisma.legalPage.findUnique({ where: { slug } });
+    if (!page) throw new NotFoundException('Legal page not found');
+    return page;
+  }
+
+  async upsertLegalPage(slug: string, title: string, content: string) {
+    return this.prisma.legalPage.upsert({
+      where: { slug },
+      update: { title, content },
+      create: { slug, title, content },
+    });
   }
 
   async updateRenterCommission(renterProfileId: string, commissionRate: number) {

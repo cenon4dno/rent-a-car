@@ -1,11 +1,27 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { IsEnum, IsNumber, Max, Min } from 'class-validator';
+import { IsEnum, IsNumber, IsString, IsOptional, Max, Min } from 'class-validator';
 import { KycStatus } from '@prisma/client';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+
+@ApiTags('legal')
+@Controller('legal')
+export class LegalController {
+  constructor(private readonly adminService: AdminService) {}
+
+  @Get()
+  list() {
+    return this.adminService.getLegalPages();
+  }
+
+  @Get(':slug')
+  get(@Param('slug') slug: string) {
+    return this.adminService.getLegalPageBySlug(slug);
+  }
+}
 
 class UpdateKycDto {
   @IsEnum(KycStatus)
@@ -17,6 +33,18 @@ class UpdateCommissionDto {
   @Min(0)
   @Max(1)
   commissionRate: number;
+}
+
+class UpsertLegalPageDto {
+  @IsString()
+  title: string;
+
+  @IsString()
+  content: string;
+
+  @IsString()
+  @IsOptional()
+  slug?: string;
 }
 
 @ApiTags('admin')
@@ -55,5 +83,27 @@ export class AdminController {
   @ApiOperation({ summary: 'Update per-renter commission rate' })
   updateCommission(@Param('id') id: string, @Body() dto: UpdateCommissionDto) {
     return this.adminService.updateRenterCommission(id, dto.commissionRate);
+  }
+
+  @Get('legal')
+  @ApiOperation({ summary: 'List all legal pages' })
+  getLegalPages() {
+    return this.adminService.getLegalPages();
+  }
+
+  @Post('legal')
+  @ApiOperation({ summary: 'Create a new legal page' })
+  createLegalPage(@Body() dto: UpsertLegalPageDto) {
+    return this.adminService.upsertLegalPage(
+      dto.slug ?? dto.title.toLowerCase().replace(/\s+/g, '-'),
+      dto.title,
+      dto.content,
+    );
+  }
+
+  @Patch('legal/:slug')
+  @ApiOperation({ summary: 'Update a legal page by slug' })
+  updateLegalPage(@Param('slug') slug: string, @Body() dto: UpsertLegalPageDto) {
+    return this.adminService.upsertLegalPage(slug, dto.title, dto.content);
   }
 }

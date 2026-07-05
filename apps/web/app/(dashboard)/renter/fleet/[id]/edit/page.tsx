@@ -34,6 +34,20 @@ export default async function EditVehiclePage({ params }: EditVehiclePageProps) 
           transmission: v.transmission,
           seatingCapacity: v.seatingCapacity,
           dailyRate: v.dailyRate,
+          vehiclePhotos: (() => {
+            try {
+              return JSON.parse((v as { vehiclePhotos?: string }).vehiclePhotos ?? '{}');
+            } catch {
+              return {};
+            }
+          })(),
+          registrationDocs: (() => {
+            try {
+              return JSON.parse((v as { registrationDocs?: string }).registrationDocs ?? '{}');
+            } catch {
+              return {};
+            }
+          })(),
         }}
       />
     </div>

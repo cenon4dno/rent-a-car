@@ -3,6 +3,7 @@ import Credentials from 'next-auth/providers/credentials';
 import Google from 'next-auth/providers/google';
 import MicrosoftEntraId from 'next-auth/providers/microsoft-entra-id';
 import Apple from 'next-auth/providers/apple';
+import Facebook from 'next-auth/providers/facebook';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -44,6 +45,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Apple({
       clientId: process.env.APPLE_CLIENT_ID!,
       clientSecret: process.env.APPLE_CLIENT_SECRET!,
+    }),
+    Facebook({
+      clientId: process.env.FACEBOOK_CLIENT_ID!,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
     }),
   ],
   session: { strategy: 'jwt' },

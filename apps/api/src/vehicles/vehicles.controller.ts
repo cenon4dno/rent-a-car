@@ -39,6 +39,17 @@ export class VehiclesController {
     return { data: await this.vehiclesService.findByRenter(req.user.id) };
   }
 
+  @Get('my/analytics')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('RENTER')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Fleet analytics: utilization rate, top vehicles by revenue, monthly revenue',
+  })
+  async getFleetAnalytics(@Request() req: { user: { id: string } }) {
+    return { data: await this.vehiclesService.getFleetAnalytics(req.user.id) };
+  }
+
   @Get('renters')
   @ApiOperation({ summary: 'Get top rental partners for public display (ordered by fleet size)' })
   async getTopRenters(@Query('limit') limit?: string) {

@@ -4,8 +4,10 @@ import { auth } from '@/auth';
 import { getBooking } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { QrCode } from '@/components/ui/QrCode';
 import { DisputeForm } from './DisputeForm';
 import { ReviewForm } from './ReviewForm';
+import { SosButton } from './SosButton';
 
 interface BookingPageProps {
   params: Promise<{ id: string }>;
@@ -104,9 +106,9 @@ export default async function BookingDetailPage({ params }: BookingPageProps) {
             <div className="border-t-2 border-dashed border-gray-200 mx-4" />
           </div>
 
-          {/* QR placeholder */}
+          {/* QR code */}
           <div className="flex justify-center py-6">
-            <QrPlaceholder value={ref} />
+            <QrCode value={ref} size={140} />
           </div>
 
           {/* Dashed separator */}
@@ -157,6 +159,22 @@ export default async function BookingDetailPage({ params }: BookingPageProps) {
           </div>
         </div>
 
+        {/* Pickup Map */}
+        <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-sm font-semibold text-gray-900">Pickup Location</p>
+            <p className="text-xs text-gray-500 mt-0.5">{b.pickupLocation}</p>
+          </div>
+          <iframe
+            title="Pickup location map"
+            width="100%"
+            height="220"
+            style={{ border: 0 }}
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=120.9,14.5,121.1,14.7&layer=mapnik&marker=14.6,121.0`}
+            loading="lazy"
+          />
+        </div>
+
         {/* Actions */}
         <div className="mt-6 flex gap-3 justify-center">
           <Link href="/bookings">
@@ -166,6 +184,20 @@ export default async function BookingDetailPage({ params }: BookingPageProps) {
             <Button variant="ghost">Browse More Cars</Button>
           </Link>
         </div>
+
+        {/* SOS button — active rentals only */}
+        {b.status === 'ACTIVE' && session.apiToken && (
+          <div className="mt-6">
+            <SosButton bookingId={b.id} token={session.apiToken as string} type="sos" />
+          </div>
+        )}
+
+        {/* Driver no-show — pending/confirmed with a driver assigned */}
+        {['PENDING', 'CONFIRMED'].includes(b.status) && b.driver && session.apiToken && (
+          <div className="mt-4">
+            <SosButton bookingId={b.id} token={session.apiToken as string} type="driver-no-show" />
+          </div>
+        )}
 
         {/* Review (customer, completed bookings only) */}
         {b.status === 'COMPLETED' && (
@@ -186,34 +218,6 @@ function BookingDetail({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
       <p className="text-sm font-medium text-gray-900 mt-0.5">{value}</p>
-    </div>
-  );
-}
-
-function QrPlaceholder({ value }: { value: string }) {
-  const cells = Array.from({ length: 7 * 7 }, (_, i) => {
-    const row = Math.floor(i / 7);
-    const col = i % 7;
-    const isFinder =
-      (row < 2 && col < 2) ||
-      (row < 2 && col > 4) ||
-      (row > 4 && col < 2) ||
-      (row === 3 && col === 3);
-    const seed = (value.charCodeAt(i % value.length) + i * 13) % 7;
-    return isFinder || seed < 3;
-  });
-
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div
-        className="grid border-2 border-gray-800 p-1 rounded"
-        style={{ gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', width: 80, height: 80 }}
-      >
-        {cells.map((filled, i) => (
-          <div key={i} className={`rounded-sm ${filled ? 'bg-gray-900' : 'bg-white'}`} />
-        ))}
-      </div>
-      <p className="text-xs font-mono text-gray-500">{value}</p>
     </div>
   );
 }
