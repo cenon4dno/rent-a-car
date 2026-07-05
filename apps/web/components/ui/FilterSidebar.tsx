@@ -4,6 +4,15 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useState, useCallback, Fragment } from 'react';
 import { Button } from './Button';
 
+const USE_CASE_TAGS = [
+  { value: 'Wedding', emoji: '💍' },
+  { value: 'Airport Transfer', emoji: '✈️' },
+  { value: 'Road Trip', emoji: '🛣️' },
+  { value: 'House Move', emoji: '📦' },
+  { value: 'Corporate', emoji: '💼' },
+  { value: 'Group Tour', emoji: '🚌' },
+];
+
 const FUEL_OPTIONS = [
   { value: 'GASOLINE', label: 'Gasoline' },
   { value: 'DIESEL', label: 'Diesel' },
@@ -30,6 +39,7 @@ export function FilterSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const [tag, setTag] = useState(searchParams.get('tag') ?? '');
   const [fuelType, setFuelType] = useState(searchParams.get('fuelType') ?? '');
   const [transmission, setTransmission] = useState(searchParams.get('transmission') ?? '');
   const [minSeats, setMinSeats] = useState(searchParams.get('minSeats') ?? '');
@@ -38,6 +48,8 @@ export function FilterSidebar() {
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
+    if (tag) params.set('tag', tag);
+    else params.delete('tag');
     if (fuelType) params.set('fuelType', fuelType);
     else params.delete('fuelType');
     if (transmission) params.set('transmission', transmission);
@@ -51,9 +63,10 @@ export function FilterSidebar() {
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
     setMobileOpen(false);
-  }, [fuelType, transmission, minSeats, minPrice, maxPrice, searchParams, router, pathname]);
+  }, [tag, fuelType, transmission, minSeats, minPrice, maxPrice, searchParams, router, pathname]);
 
   const clearFilters = useCallback(() => {
+    setTag('');
     setFuelType('');
     setTransmission('');
     setMinSeats('');
@@ -70,10 +83,35 @@ export function FilterSidebar() {
     setMobileOpen(false);
   }, [searchParams, router, pathname]);
 
-  const hasActiveFilters = Boolean(fuelType || transmission || minSeats || minPrice || maxPrice);
+  const hasActiveFilters = Boolean(
+    tag || fuelType || transmission || minSeats || minPrice || maxPrice,
+  );
 
   const filterContent = (
     <div className="space-y-6">
+      <div>
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Use Case
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {USE_CASE_TAGS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setTag(tag === t.value ? '' : t.value)}
+              className={[
+                'px-2.5 py-1 rounded-full text-xs border transition-colors font-medium',
+                tag === t.value
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300',
+              ].join(' ')}
+            >
+              {t.emoji} {t.value}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div>
         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Fuel Type

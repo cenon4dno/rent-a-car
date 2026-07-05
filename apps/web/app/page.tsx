@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { SearchWidget } from '@/components/ui/SearchWidget';
 import { VehicleCard } from '@/components/ui/VehicleCard';
 import { PartnerCard } from '@/components/ui/PartnerCard';
+import { FeaturedCarousel } from '@/components/ui/FeaturedCarousel';
 import { Button } from '@/components/ui/Button';
 import { searchVehicles, getTopRenters, type VehicleWithRenter, type TopRenter } from '@/lib/api';
 
@@ -60,11 +61,13 @@ const HOW_IT_WORKS = [
 
 export default async function HomePage() {
   const [vehicleResult, renterResult] = await Promise.all([
-    searchVehicles({ limit: 4 }).catch(() => null),
+    searchVehicles({ limit: 8 }).catch(() => null),
     getTopRenters(6).catch(() => null),
   ]);
 
-  const featuredVehicles = vehicleResult?.data?.data ?? [];
+  const allVehicles = vehicleResult?.data?.data ?? [];
+  const featuredVehicles = allVehicles;
+  const gridVehicles = allVehicles.slice(0, 4);
   const topRenters = renterResult?.data ?? [];
 
   return (
@@ -113,6 +116,9 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Featured Car Carousel ── */}
+      {featuredVehicles.length > 0 && <FeaturedCarousel vehicles={featuredVehicles} />}
+
       {/* ── How It Works ── */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -154,9 +160,9 @@ export default async function HomePage() {
               </Button>
             </Link>
           </div>
-          {featuredVehicles.length > 0 ? (
+          {gridVehicles.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredVehicles.map((v: VehicleWithRenter) => {
+              {gridVehicles.map((v: VehicleWithRenter) => {
                 const images = parseImageUrls(v.imageUrls);
                 return (
                   <VehicleCard

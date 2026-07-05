@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { CreateRenterReviewDto } from './dto/create-renter-review.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -55,6 +56,45 @@ export class ReviewsService {
     const reviews = await this.prisma.review.findMany({
       where: { vehicleId: { in: vehicleIds } },
       include: { vehicle: { select: { make: true, model: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    const avg = reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
+    return { data: reviews, averageRating: Math.round(avg * 10) / 10, total: reviews.length };
+  }
+
+  async createRenterReview(renterUserId: string, dto: CreateRenterReviewDto) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: dto.bookingId },
+      include: { renter: true, renterReview: true },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.renter.userId !== renterUserId) throw new ForbiddenException();
+    if (booking.status !== 'COMPLETED')
+      throw new ForbiddenException('Can only review completed bookings');
+    if (booking.renterReview) throw new ConflictException('Review already submitted');
+
+    return this.prisma.renterReview.create({
+      data: {
+        bookingId: dto.bookingId,
+        customerId: booking.customerId,
+        renterId: booking.renterId,
+        rating: dto.rating,
+        comment: dto.comment,
+      },
+    });
+  }
+
+  async findByCustomer(customerId: string) {
+    const reviews = await this.prisma.renterReview.findMany({
+      where: { customerId },
+      include: {
+        booking: {
+          select: {
+            referenceNumber: true,
+            vehicle: { select: { make: true, model: true } },
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
     const avg = reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;

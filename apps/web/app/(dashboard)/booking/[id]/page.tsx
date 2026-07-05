@@ -5,6 +5,7 @@ import { getBooking } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { DisputeForm } from './DisputeForm';
+import { ReviewForm } from './ReviewForm';
 
 interface BookingPageProps {
   params: Promise<{ id: string }>;
@@ -165,6 +166,11 @@ export default async function BookingDetailPage({ params }: BookingPageProps) {
             <Button variant="ghost">Browse More Cars</Button>
           </Link>
         </div>
+
+        {/* Review (customer, completed bookings only) */}
+        {b.status === 'COMPLETED' && (
+          <ReviewForm bookingId={b.id} vehicleId={b.vehicleId} token={session.apiToken as string} />
+        )}
 
         {/* Dispute */}
         {['COMPLETED', 'ACTIVE', 'CONFIRMED'].includes(b.status) && (

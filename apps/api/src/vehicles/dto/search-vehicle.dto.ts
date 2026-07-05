@@ -49,6 +49,14 @@ export class SearchVehicleDto {
   @IsNumber()
   maxPrice?: number;
 
+  @ApiPropertyOptional({
+    description: 'Filter by use-case tag e.g. Wedding, Airport Transfer',
+    example: 'Wedding',
+  })
+  @IsOptional()
+  @IsString()
+  tag?: string;
+
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
   @Type(() => Number)

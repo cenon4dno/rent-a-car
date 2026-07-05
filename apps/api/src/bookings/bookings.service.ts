@@ -8,6 +8,7 @@ import {
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const PLATFORM_FEE_RATE = 0.05;
 const RESERVATION_HOLD_MINUTES = 10;
@@ -15,7 +16,10 @@ const ADDON_RATES = { childSeat: 500, chauffeur: 1500 };
 
 @Injectable()
 export class BookingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async create(customerId: string, dto: CreateBookingDto) {
     const start = new Date(dto.startDate);
@@ -122,7 +126,64 @@ export class BookingsService {
   }
 
   async cancel(id: string, userId: string, role: string) {
-    return this.updateStatus(id, BookingStatus.CANCELLED, userId, role);
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+      include: {
+        renter: { include: { user: true } },
+        customer: { include: { user: true } },
+        vehicle: true,
+        payment: true,
+      },
+    });
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    if (role === 'RENTER' && booking.renter.userId !== userId) throw new ForbiddenException();
+    if (role === 'CUSTOMER' && booking.customer.userId !== userId) throw new ForbiddenException();
+
+    // SLA-based refund calculation
+    const hoursUntilPickup =
+      (new Date(booking.startDate).getTime() - Date.now()) / (1000 * 60 * 60);
+    let refundRate = 0;
+    if (hoursUntilPickup >= 48) refundRate = 1.0;
+    else if (hoursUntilPickup >= 24) refundRate = 0.5;
+
+    const refundAmount = Math.round(booking.totalAmount * refundRate);
+
+    await this.prisma.booking.update({ where: { id }, data: { status: BookingStatus.CANCELLED } });
+
+    if (booking.payment?.status === 'PAID' && refundAmount > 0) {
+      await this.prisma.payment.update({
+        where: { bookingId: id },
+        data: { status: 'REFUNDED', refundedAt: new Date() },
+      });
+    }
+
+    const vehicleName = `${booking.vehicle.make} ${booking.vehicle.model}`;
+    const ref = `RAC-${booking.id.toUpperCase().slice(0, 8)}`;
+
+    // Email notifications (fire-and-forget)
+    void this.notifications.sendBookingCancellation({
+      to: booking.customer.user.email,
+      customerName: booking.customer.user.name,
+      vehicleName,
+      referenceNumber: ref,
+      refundAmount,
+      refundRate,
+    });
+    void this.notifications.sendRenterCancellationAlert({
+      to: booking.renter.user.email,
+      renterName: booking.renter.user.name,
+      vehicleName,
+      referenceNumber: ref,
+      startDate: booking.startDate,
+    });
+
+    return {
+      ...booking,
+      status: BookingStatus.CANCELLED,
+      refundAmount,
+      refundRate,
+    };
   }
 
   async complete(id: string, renterId: string) {

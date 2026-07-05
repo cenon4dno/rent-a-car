@@ -9,6 +9,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { IPaymentProvider, CardDetails } from './providers/payment-provider.interface';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export const PAYMENT_PROVIDER = 'PAYMENT_PROVIDER';
 
@@ -19,6 +20,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(PAYMENT_PROVIDER) private readonly provider: IPaymentProvider,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async initiatePayment(
@@ -125,10 +127,35 @@ export class PaymentsService {
     const payment = await this.prisma.payment.findUnique({ where: { bookingId } });
     if (!payment) throw new NotFoundException('Payment not found');
 
-    return this.prisma.payment.update({
+    const updated = await this.prisma.payment.update({
       where: { bookingId },
       data: { status: 'PAID', paidAt: new Date() },
     });
+
+    // Send confirmation email (fire-and-forget)
+    void this.prisma.booking
+      .findUnique({
+        where: { id: bookingId },
+        include: {
+          customer: { include: { user: true } },
+          vehicle: true,
+        },
+      })
+      .then((booking) => {
+        if (!booking) return;
+        const ref = `RAC-${booking.id.toUpperCase().slice(0, 8)}`;
+        return this.notifications.sendBookingConfirmation({
+          to: booking.customer.user.email,
+          customerName: booking.customer.user.name,
+          vehicleName: `${booking.vehicle.make} ${booking.vehicle.model}`,
+          referenceNumber: ref,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          totalAmount: booking.totalAmount,
+        });
+      });
+
+    return updated;
   }
 
   async refund(bookingId: string) {

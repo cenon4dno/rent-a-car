@@ -18,6 +18,7 @@ export class VehiclesService {
       data: {
         ...dto,
         imageUrls: JSON.stringify(dto.imageUrls ?? []),
+        tags: JSON.stringify(dto.tags ?? []),
         renterId: renterProfile.id,
       },
     });
@@ -32,6 +33,7 @@ export class VehiclesService {
       minSeats,
       minPrice,
       maxPrice,
+      tag,
       page = 1,
       limit = 20,
     } = dto;
@@ -51,34 +53,28 @@ export class VehiclesService {
           ).map((b) => b.vehicleId)
         : [];
 
+    const baseWhere = {
+      status: 'AVAILABLE' as const,
+      id: bookedVehicleIds.length
+        ? ({ notIn: bookedVehicleIds } as { notIn: string[] })
+        : undefined,
+      fuelType: fuelType ?? undefined,
+      transmission: transmission ?? undefined,
+      seatingCapacity: minSeats ? { gte: minSeats } : undefined,
+      dailyRate: { gte: minPrice ?? undefined, lte: maxPrice ?? undefined },
+      // SQLite: tags is stored as JSON string — use contains for tag filter
+      tags: tag ? { contains: tag } : undefined,
+    };
+
     const [data, total] = await this.prisma.$transaction([
       this.prisma.vehicle.findMany({
-        where: {
-          status: 'AVAILABLE',
-          id: bookedVehicleIds.length ? { notIn: bookedVehicleIds } : undefined,
-          fuelType: fuelType ?? undefined,
-          transmission: transmission ?? undefined,
-          seatingCapacity: minSeats ? { gte: minSeats } : undefined,
-          dailyRate: {
-            gte: minPrice ?? undefined,
-            lte: maxPrice ?? undefined,
-          },
-        },
+        where: baseWhere,
         include: { renter: { select: { companyName: true, trustBadge: true } } },
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.vehicle.count({
-        where: {
-          status: 'AVAILABLE',
-          id: bookedVehicleIds.length ? { notIn: bookedVehicleIds } : undefined,
-          fuelType: fuelType ?? undefined,
-          transmission: transmission ?? undefined,
-          seatingCapacity: minSeats ? { gte: minSeats } : undefined,
-          dailyRate: { gte: minPrice ?? undefined, lte: maxPrice ?? undefined },
-        },
-      }),
+      this.prisma.vehicle.count({ where: baseWhere }),
     ]);
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
@@ -125,6 +121,9 @@ export class VehiclesService {
       data: {
         ...dto,
         imageUrls: dto.imageUrls ? JSON.stringify(dto.imageUrls) : undefined,
+        tags: (dto as { tags?: string[] }).tags
+          ? JSON.stringify((dto as { tags?: string[] }).tags)
+          : undefined,
       },
     });
   }

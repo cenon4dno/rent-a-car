@@ -50,4 +50,12 @@ export class CreateVehicleDto {
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   imageUrls?: string[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Use-case tags e.g. Wedding, Airport Transfer, Road Trip',
+    example: ['Wedding', 'Airport Transfer'],
+  })
+  @IsOptional()
+  tags?: string[];
 }

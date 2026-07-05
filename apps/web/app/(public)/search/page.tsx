@@ -14,6 +14,7 @@ interface SearchPageProps {
     minSeats?: string;
     minPrice?: string;
     maxPrice?: string;
+    tag?: string;
     page?: string;
   }>;
 }
@@ -33,6 +34,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     minSeats: params.minSeats ? Number(params.minSeats) : undefined,
     minPrice: params.minPrice ? Number(params.minPrice) : undefined,
     maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+    tag: params.tag,
     page,
     limit: 12,
   }).catch(() => null);

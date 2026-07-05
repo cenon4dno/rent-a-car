@@ -2,7 +2,10 @@ import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { CreateRenterReviewDto } from './dto/create-renter-review.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @ApiTags('reviews')
 @Controller('reviews')
@@ -27,5 +30,20 @@ export class ReviewsController {
   @ApiOperation({ summary: 'Get all reviews for a renter fleet with average rating' })
   findByRenter(@Param('renterId') renterId: string) {
     return this.reviewsService.findByRenter(renterId);
+  }
+
+  @Post('renter')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('RENTER')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Renter submits a review for a customer post-trip' })
+  createRenterReview(@Request() req: { user: { id: string } }, @Body() dto: CreateRenterReviewDto) {
+    return this.reviewsService.createRenterReview(req.user.id, dto);
+  }
+
+  @Get('customer/:customerId')
+  @ApiOperation({ summary: 'Get renter reviews about a customer' })
+  findByCustomer(@Param('customerId') customerId: string) {
+    return this.reviewsService.findByCustomer(customerId);
   }
 }

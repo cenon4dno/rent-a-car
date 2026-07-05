@@ -14,10 +14,20 @@ interface VehicleFormProps {
 
 const FUEL_OPTIONS = ['GASOLINE', 'DIESEL', 'HYBRID', 'ELECTRIC'];
 const TRANSMISSION_OPTIONS = ['AUTOMATIC', 'MANUAL', 'CVT'];
+const TAG_OPTIONS = [
+  'Wedding',
+  'Airport Transfer',
+  'Road Trip',
+  'House Move',
+  'Corporate',
+  'Group Tour',
+];
 
 export function VehicleForm({ mode, vehicleId, initial = {} }: VehicleFormProps) {
   const router = useRouter();
   const { data: session } = useSession();
+
+  const [selectedTags, setSelectedTags] = useState<string[]>(initial.tags ?? []);
 
   const [form, setForm] = useState<CreateVehicleBody>({
     make: initial.make ?? '',
@@ -32,6 +42,10 @@ export function VehicleForm({ mode, vehicleId, initial = {} }: VehicleFormProps)
     mileageLimit: initial.mileageLimit,
   });
 
+  function toggleTag(t: string) {
+    setSelectedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+  }
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,10 +59,11 @@ export function VehicleForm({ mode, vehicleId, initial = {} }: VehicleFormProps)
     setError(null);
 
     try {
+      const body = { ...form, tags: selectedTags };
       if (mode === 'create') {
-        await createVehicle(form, session.apiToken);
+        await createVehicle(body, session.apiToken);
       } else if (vehicleId) {
-        await updateVehicle(vehicleId, form, session.apiToken);
+        await updateVehicle(vehicleId, body, session.apiToken);
       }
       router.push('/renter/fleet');
       router.refresh();
@@ -170,6 +185,29 @@ export function VehicleForm({ mode, vehicleId, initial = {} }: VehicleFormProps)
           className={`${inputCls} resize-none`}
         />
       </Field>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Use-case tags <span className="text-gray-400 font-normal">(select all that apply)</span>
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {TAG_OPTIONS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => toggleTag(t)}
+              className={[
+                'px-3 py-1 rounded-full text-sm border transition-colors',
+                selectedTags.includes(t)
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300',
+              ].join(' ')}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">

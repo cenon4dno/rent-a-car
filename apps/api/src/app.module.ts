@@ -11,10 +11,13 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { AdminModule } from './admin/admin.module';
 import { DisputesModule } from './disputes/disputes.module';
 import { ChatModule } from './chat/chat.module';
+import { DriversModule } from './drivers/drivers.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
     PrismaModule,
+    NotificationsModule,
     UsersModule,
     AuthModule,
     VehiclesModule,
@@ -24,6 +27,7 @@ import { ChatModule } from './chat/chat.module';
     AdminModule,
     DisputesModule,
     ChatModule,
+    DriversModule,
   ],
   controllers: [AppController],
   providers: [AppService],

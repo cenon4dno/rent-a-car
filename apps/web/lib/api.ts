@@ -71,6 +71,7 @@ export interface VehicleSearchParams {
   minSeats?: number;
   minPrice?: number;
   maxPrice?: number;
+  tag?: string;
   page?: number;
   limit?: number;
 }
@@ -260,6 +261,7 @@ export interface CreateVehicleBody {
   dailyRate: number;
   mileageLimit?: number;
   imageUrls?: string[];
+  tags?: string[];
 }
 
 export async function getMyVehicles(token: string) {
@@ -418,6 +420,58 @@ export async function uploadDocument(
     throw new Error((err as { message?: string }).message ?? 'Upload failed');
   }
   return res.json() as Promise<{ data: { fileUrl: string } }>;
+}
+
+// ─── Drivers ─────────────────────────────────────────────────────────────────
+
+export interface DriverPublicProfile {
+  id: string;
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  kycStatus: string;
+  completedTrips: number;
+}
+
+export interface RenterDriver {
+  id: string;
+  userId: string;
+  renterId: string;
+  licenseUrl: string | null;
+  backgroundCheckUrl: string | null;
+  kycStatus: string;
+  createdAt: string;
+  user: { id: string; name: string; email: string; avatarUrl: string | null; kycStatus: string };
+  _count: { bookings: number };
+}
+
+export async function getMyDrivers(token: string) {
+  return apiFetch<ApiResponse<RenterDriver[]>>(`/drivers/my`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+export async function createDriver(
+  body: { email: string; name: string; licenseUrl?: string; backgroundCheckUrl?: string },
+  token: string,
+) {
+  return apiFetch<ApiResponse<RenterDriver>>(`/drivers`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function deleteDriver(driverProfileId: string, token: string) {
+  return apiFetch<ApiResponse<{ deleted: boolean }>>(`/drivers/${driverProfileId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function getDriverPublicProfile(id: string) {
+  return apiFetch<ApiResponse<DriverPublicProfile>>(`/drivers/${id}`);
 }
 
 // ─── Chat ─────────────────────────────────────────────────────────────────────
