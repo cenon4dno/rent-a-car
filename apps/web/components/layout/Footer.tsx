@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export function Footer() {
@@ -100,17 +101,16 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
           <span>© {new Date().getFullYear()} RentACar. All rights reserved. Platform fee: 5%.</span>
-          <span>
-            Created by{' '}
-            <a
-              href="https://u2i.com"
-              target="_blank"
-              rel="noreferrer"
-              className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
-            >
-              u2i
-            </a>
-          </span>
+          <a
+            href="https://u2i.ai"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-gray-400">Created by</span>
+            <Image src="/u2i-logo.png" alt="u2i" width={28} height={28} className="rounded" />
+            <span className="text-blue-400 font-medium">u2i.ai</span>
+          </a>
         </div>
       </div>
     </footer>

@@ -30,10 +30,20 @@ export default async function EditVehiclePage({ params }: EditVehiclePageProps) 
           model: v.model,
           year: v.year,
           plateNumber: v.plateNumber,
+          description: (v as { description?: string | null }).description ?? undefined,
           fuelType: v.fuelType,
           transmission: v.transmission,
           seatingCapacity: v.seatingCapacity,
           dailyRate: v.dailyRate,
+          mileageLimit: v.mileageLimit ?? undefined,
+          tags: (() => {
+            try {
+              const t = JSON.parse((v as { tags?: string }).tags ?? '[]');
+              return Array.isArray(t) ? t : [];
+            } catch {
+              return [];
+            }
+          })(),
           vehiclePhotos: (() => {
             try {
               return JSON.parse((v as { vehiclePhotos?: string }).vehiclePhotos ?? '{}');

@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { json, urlencoded } from 'express';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
@@ -7,7 +8,22 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+    bodyParser: false, // register manually below to set a higher limit
+  });
+
+  // 50 MB limit for JSON bodies (base64 vehicle photos can be several MB)
+  // The verify callback preserves rawBody for the PayMongo webhook handler
+  app.use(
+    json({
+      limit: '50mb',
+      verify: (req: Record<string, unknown>, _res: unknown, buf: Buffer) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
 

@@ -134,12 +134,14 @@ export function VehicleForm({ mode, vehicleId, initial = {} }: VehicleFormProps)
     e.preventDefault();
     if (!session?.apiToken) return;
 
-    const missingPhotos = PHOTO_SLOTS.filter(({ key }) => !vehiclePhotos[key]).map(
-      ({ label }) => label,
-    );
-    if (missingPhotos.length) {
-      setError(`Please upload all required vehicle photos: ${missingPhotos.join(', ')}.`);
-      return;
+    if (mode === 'create') {
+      const missingPhotos = PHOTO_SLOTS.filter(({ key }) => !vehiclePhotos[key]).map(
+        ({ label }) => label,
+      );
+      if (missingPhotos.length) {
+        setError(`Please upload all required vehicle photos: ${missingPhotos.join(', ')}.`);
+        return;
+      }
     }
 
     setLoading(true);
