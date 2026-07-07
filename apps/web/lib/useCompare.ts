@@ -28,10 +28,9 @@ function write(list: CompareVehicle[]) {
 }
 
 export function useCompare() {
-  const [list, setList] = useState<CompareVehicle[]>([]);
+  const [list, setList] = useState<CompareVehicle[]>(() => read());
 
   useEffect(() => {
-    setList(read());
     const handler = () => setList(read());
     window.addEventListener('rac_compare_change', handler);
     return () => window.removeEventListener('rac_compare_change', handler);
