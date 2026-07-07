@@ -63,6 +63,7 @@ model User {
   id              String           @id @default(cuid())
   email           String           @unique
   name            String
+  phone           String?
   avatarUrl       String?
   role            UserRole         @default(CUSTOMER)
   kycStatus       KycStatus        @default(PENDING)
@@ -123,6 +124,7 @@ model CustomerProfile {
   id             String    @id @default(cuid())
   userId         String    @unique
   licenseUrl     String?
+  licenseBackUrl String?
   secondaryIdUrl String?
   kycStatus      KycStatus @default(PENDING)
   createdAt      DateTime  @default(now())
@@ -150,6 +152,7 @@ model Vehicle {
   vehiclePhotos    String           @default("{}")
   registrationDocs String           @default("{}")
   tags             String           @default("[]")
+  operatingLocation String?
   status           VehicleStatus    @default(AVAILABLE)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
@@ -266,4 +269,27 @@ model LegalPage {
   content   String
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  subject     String
+  category    String   @default("Feedback")
+  message     String
+  attachmentUrl String?
+  status      String   @default("NEW")
+  adminReply  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HomepageConfig {
+  id           String   @id @default(cuid())
+  slides       String   @default("[]")
+  featuredMode String   @default("AUTO")
+  featuredIds  String   @default("[]")
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
 }
