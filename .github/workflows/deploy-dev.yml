@@ -81,7 +81,7 @@ jobs:
           cp apps/api/package.json api-bundle/package.json
           cd api-bundle
           npm install --omit=dev
-          printf '#!/bin/sh\nnode_modules/.bin/prisma migrate deploy\nexec node dist/main.js\n' > start.sh
+          printf '#!/bin/sh\nif [ -n "$DATABASE_URL" ]; then\n  echo "Running prisma migrate deploy"\n  node_modules/.bin/prisma migrate deploy\nelse\n  echo "Skipping prisma migrate deploy - DATABASE_URL not set"\nfi\nexec node dist/main.js\n' > start.sh
           chmod +x start.sh
 
       - name: Deploy API to Azure App Service
