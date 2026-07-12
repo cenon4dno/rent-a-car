@@ -54,15 +54,42 @@ jobs:
       - name: Build API
         run: npm run build --workspace=@rent-a-car/api
 
+      # The repo is an npm workspace: dependencies are hoisted to the root
+      # node_modules, so deploying apps/api alone ships no usable deps.
+      # Assemble a self-contained package instead. App Service runs
+      # "npm start" by default (startup-command is unsupported with
+      # publish-profile auth), so the start script must boot production code.
+      - name: Assemble self-contained API package
+        run: |
+          mkdir -p deploy-api
+          cp -r apps/api/dist deploy-api/dist
+          cp -r apps/api/prisma deploy-api/prisma
+          node <<'EOF'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('apps/api/package.json', 'utf8'));
+          fs.writeFileSync('deploy-api/package.json', JSON.stringify({
+            name: pkg.name,
+            version: pkg.version,
+            private: true,
+            scripts: {
+              // migrate the on-server database before boot; never block startup on it
+              start: "(npx prisma migrate deploy || echo 'WARN: prisma migrate deploy failed') && node dist/main.js",
+            },
+            dependencies: pkg.dependencies,
+          }, null, 2));
+          EOF
+          cd deploy-api
+          npm install --omit=dev --no-audit --no-fund
+          npx prisma generate
+        shell: bash
+
       - name: Deploy API to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: ${{ env.AZURE_SLOT_API }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_DEV }}
-          package: apps/api
-          # startup-command is unsupported with publish-profile auth;
-          # set "node dist/main.js" in the slot's Startup Command in the Azure portal
+          package: deploy-api
 
   deploy-web:
     name: Deploy Web (Dev)
@@ -89,12 +116,35 @@ jobs:
           NEXTAUTH_URL: ${{ secrets.DEV_NEXTAUTH_URL }}
           NEXT_PUBLIC_API_URL: ${{ secrets.DEV_NEXT_PUBLIC_API_URL }}
 
+      # next.config.ts uses output:'standalone', which emits a minimal server
+      # with its own node_modules under .next/standalone. In a monorepo the
+      # layout mirrors the repo, so the server entry is apps/web/server.js.
+      # Static assets and public/ are not included and must be copied in.
+      - name: Assemble self-contained Web package
+        run: |
+          mkdir -p deploy-web
+          cp -r apps/web/.next/standalone/. deploy-web/
+          test -f deploy-web/apps/web/server.js || { echo "server.js not at expected path; standalone layout:"; find deploy-web -maxdepth 3 -name server.js; exit 1; }
+          mkdir -p deploy-web/apps/web/.next
+          cp -r apps/web/.next/static deploy-web/apps/web/.next/static
+          cp -r apps/web/public deploy-web/apps/web/public
+          node <<'EOF'
+          const fs = require('fs');
+          fs.writeFileSync('deploy-web/package.json', JSON.stringify({
+            name: '@rent-a-car/web-deploy',
+            private: true,
+            scripts: {
+              // HOSTNAME can be set to the container id on App Service; force 0.0.0.0
+              start: 'HOSTNAME=0.0.0.0 node apps/web/server.js',
+            },
+          }, null, 2));
+          EOF
+        shell: bash
+
       - name: Deploy Web to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: ${{ env.AZURE_SLOT_WEB }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB_DEV }}
-          package: apps/web
-          # startup-command is unsupported with publish-profile auth;
-          # set "node server.js" in the slot's Startup Command in the Azure portal
+          package: deploy-web
