@@ -201,7 +201,28 @@ async function main() {
     include: { customerProfile: true },
   });
 
-  console.log('  ✓ Customers (4)');
+  // Dev quick-login test user — fully verified so the booking flow works
+  // out of the box (see "Login as Test User" on the login page)
+  await prisma.user.create({
+    data: {
+      email: 'testuser@dev.local',
+      name: 'Juan dela Cruz',
+      role: UserRole.CUSTOMER,
+      kycStatus: KycStatus.VERIFIED,
+      passwordHash: await bcrypt.hash(process.env.DEV_USER_SEED_PASSWORD || 'password123', 10),
+      avatarUrl: 'https://i.pravatar.cc/150?u=juan.delacruz',
+      customerProfile: {
+        create: {
+          licenseUrl: 'https://example.com/docs/juan-license-front.jpg',
+          licenseBackUrl: 'https://example.com/docs/juan-license-back.jpg',
+          secondaryIdUrl: 'https://example.com/docs/juan-passport.jpg',
+          kycStatus: KycStatus.VERIFIED,
+        },
+      },
+    },
+  });
+
+  console.log('  ✓ Customers (5)');
 
   // ── Drivers ────────────────────────────────────────────────────────────────
 
@@ -722,6 +743,7 @@ async function main() {
   console.log(`  Jose Reyes            ${c2.email}  [PENDING]`);
   console.log(`  Ana Cruz              ${c3.email}  [VERIFIED]`);
   console.log(`  Miguel Dela Cruz      ${c4.email}  [VERIFIED]`);
+  console.log(`  Juan dela Cruz        testuser@dev.local  [VERIFIED, dev quick login]`);
   console.log('\n── Drivers ─────────────────────────────────────────');
   console.log(`  Roberto Dela Cruz     ${d1.email}  (Metro, VERIFIED)`);
   console.log(`  Manuel Garcia         ${d2.email}  (Metro, UNDER_REVIEW)`);

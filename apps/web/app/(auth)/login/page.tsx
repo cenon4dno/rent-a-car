@@ -28,6 +28,23 @@ function LoginForm() {
     }
   }
 
+  async function quickLogin(loginEmail: string, loginPassword: string) {
+    setIsLoading(true);
+    setFormError(null);
+    const result = await signIn('credentials', {
+      email: loginEmail,
+      password: loginPassword,
+      redirect: false,
+      callbackUrl,
+    });
+    setIsLoading(false);
+    if (result?.error) {
+      setFormError('Quick login failed — has the database been seeded?');
+    } else if (result?.url) {
+      router.push(result.url);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md space-y-8">
@@ -149,43 +166,61 @@ function LoginForm() {
           .
         </p>
 
-        {/* Dev shortcuts */}
-        <div className="border border-dashed border-gray-300 rounded-lg p-4 space-y-2">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">
-            Dev — quick login
-          </p>
-          {[
-            { label: 'Admin', email: 'cenon4dno@gmail.com', badge: 'bg-red-100 text-red-700' },
-            {
-              label: 'Metro Car Rentals',
-              email: 'metro@rentacar.ph',
-              badge: 'bg-blue-100 text-blue-700',
-            },
-            {
-              label: 'Island Wheels',
-              email: 'island@wheels.ph',
-              badge: 'bg-green-100 text-green-700',
-            },
-            {
-              label: 'Premier Drive',
-              email: 'premier@drive.ph',
-              badge: 'bg-purple-100 text-purple-700',
-            },
-          ].map(({ label, email, badge }) => (
+        {/* Dev shortcuts — stripped from production builds via NODE_ENV */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="border border-dashed border-gray-300 rounded-lg p-4 space-y-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide text-center">
+              Dev — quick login
+            </p>
             <button
-              key={email}
               type="button"
-              onClick={() => {
-                setEmail(email);
-                setPassword('password123');
-              }}
-              className="w-full flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs hover:bg-white transition-colors"
+              disabled={isLoading}
+              onClick={() =>
+                quickLogin(
+                  'testuser@dev.local',
+                  process.env.NEXT_PUBLIC_DEV_USER_PASSWORD ?? 'password123',
+                )
+              }
+              className="w-full flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs hover:bg-white transition-colors disabled:opacity-50"
             >
-              <span className={`rounded px-1.5 py-0.5 font-semibold ${badge}`}>{label}</span>
-              <span className="text-gray-400">{email}</span>
+              <span className="rounded px-1.5 py-0.5 font-semibold bg-emerald-100 text-emerald-700">
+                Login as Test User
+              </span>
+              <span className="text-gray-400">testuser@dev.local</span>
             </button>
-          ))}
-        </div>
+            {[
+              { label: 'Admin', email: 'cenon4dno@gmail.com', badge: 'bg-red-100 text-red-700' },
+              {
+                label: 'Metro Car Rentals',
+                email: 'metro@rentacar.ph',
+                badge: 'bg-blue-100 text-blue-700',
+              },
+              {
+                label: 'Island Wheels',
+                email: 'island@wheels.ph',
+                badge: 'bg-green-100 text-green-700',
+              },
+              {
+                label: 'Premier Drive',
+                email: 'premier@drive.ph',
+                badge: 'bg-purple-100 text-purple-700',
+              },
+            ].map(({ label, email, badge }) => (
+              <button
+                key={email}
+                type="button"
+                onClick={() => {
+                  setEmail(email);
+                  setPassword('password123');
+                }}
+                className="w-full flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs hover:bg-white transition-colors"
+              >
+                <span className={`rounded px-1.5 py-0.5 font-semibold ${badge}`}>{label}</span>
+                <span className="text-gray-400">{email}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
