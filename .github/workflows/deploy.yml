@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace=@rent-a-car/api
+
       - name: Prepare DATABASE_URL for migrations
         run: |
           DB_URL='${{ secrets.PROD_DATABASE_URL }}'
