@@ -7,8 +7,9 @@ on:
     branches: [dev]
 
 env:
-  AZURE_WEBAPP_NAME_API: rent-a-car-api-dev
-  AZURE_WEBAPP_NAME_WEB: rent-a-car-web-dev
+  AZURE_WEBAPP_NAME: mtp-code01
+  AZURE_SLOT_API: rent-a-car-backend
+  AZURE_SLOT_WEB: rent-a-car-frontend
   NODE_VERSION: '20'
 
 jobs:
@@ -56,7 +57,8 @@ jobs:
       - name: Deploy API to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME_API }}
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: ${{ env.AZURE_SLOT_API }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_DEV }}
           package: apps/api
           startup-command: node dist/main.js
@@ -89,7 +91,8 @@ jobs:
       - name: Deploy Web to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME_WEB }}
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: ${{ env.AZURE_SLOT_WEB }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB_DEV }}
           package: apps/web
           startup-command: node server.js
