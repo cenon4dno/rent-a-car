@@ -1,5 +1,21 @@
 # Observations Log
 
+## 2026-07-12 — Iteration 23 (Public Legal Pages)
+
+**Goal:** [P2] Public legal pages — footer legal links must work without authentication
+**Outcome:** Done
+**Findings:**
+
+- The blocker was solely middleware `PUBLIC_PATHS` — the `/legal/[slug]` page and the `GET /legal/:slug` API (LegalController, no guard) were already public. The entire `(public)` route group except /search and /vehicle was being redirected to login: /legal, /compare, /renter/[id], /driver/[id] were all affected.
+- `/renter` and `/driver` prefixes are shared by public profile pages and dashboards; adding them to PUBLIC_PATHS is safe because the renter/admin dashboard layouts do their own `auth()` + role check server-side. Route-group membership does not affect URLs — middleware path checks must account for this.
+- /how-it-works and /partners are linked from the Navbar/Footer but the pages do not exist (404) — added to backlog.
+
+**Next Actions:** (added to backlog)
+
+- Build /how-it-works and /partners pages (currently dead Navbar/Footer links).
+
+---
+
 ## 2026-07-12 — Iteration 22 (Role-Aware Navbar)
 
 **Goal:** [P2] Role-aware Navbar — hide onboarding links for signed-in users, role-specific dashboards for staff roles

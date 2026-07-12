@@ -1,7 +1,21 @@
 import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 
-const PUBLIC_PATHS = ['/', '/login', '/search', '/vehicle'];
+// Prefixes reachable without a session. /renter and /driver cover the public
+// profile pages ([id]) — the renter/admin dashboards under the same prefixes
+// are still guarded server-side by their own layouts.
+const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/search',
+  '/vehicle',
+  '/legal',
+  '/compare',
+  '/renter',
+  '/driver',
+  '/how-it-works',
+  '/partners',
+];
 const BOOKING_PATHS = ['/booking', '/bookings'];
 
 export default auth((req) => {
