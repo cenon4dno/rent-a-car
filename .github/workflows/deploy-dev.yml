@@ -72,9 +72,10 @@ jobs:
             version: pkg.version,
             private: true,
             scripts: {
-              // migrate the on-server database before boot; never block startup on it.
+              // migrate the on-server database, seed dummy data if the db is empty,
+              // then boot; never block startup on migrate/seed failures.
               // nest build emits dist/src/main.js (prisma/*.ts is compiled too, keeping the src/ prefix)
-              start: "(npx prisma migrate deploy || echo 'WARN: prisma migrate deploy failed') && node dist/src/main.js",
+              start: "(npx prisma migrate deploy || echo 'WARN: prisma migrate deploy failed') && (node dist/prisma/seed-if-empty.js || echo 'WARN: seed-if-empty failed') && node dist/src/main.js",
             },
             dependencies: pkg.dependencies,
           }, null, 2));
