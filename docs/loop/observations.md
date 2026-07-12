@@ -1,5 +1,24 @@
 # Observations Log
 
+## 2026-07-12 — Iteration 20 (Post-SSO Registration & License KYC)
+
+**Goal:** [P1] Post-SSO user registration & driver's license KYC — mandatory onboarding, booking blocked until admin approval
+**Outcome:** Done
+**Findings:**
+
+- `ensureCustomerProfile()` existed but was never called — new SSO customers had no CustomerProfile, so license uploads threw "not applicable" and booking create threw "Customer profile not found". Fixed at both ends: `upsertFromSso` now nested-creates the profile, and `updateDocumentUrl` auto-creates it for legacy CUSTOMER accounts.
+- `profileComplete` (CUSTOMER has both license sides on file; always true for other roles) is computed by the API and returned from both `/auth/sso` and `/auth/login`, then carried in the NextAuth JWT and exposed as `session.profileComplete`.
+- JWT staleness after onboarding is solved with NextAuth v5's `trigger === 'update'` branch in the jwt callback: the onboarding Continue button calls `useSession().update()`, which re-fetches `/users/me` server-side and recomputes the flag before redirecting.
+- Middleware gates `/booking` + `/bookings` for incomplete customers (fast, JWT-based); `/booking/review` additionally does a live `getMe` check because admin approval/rejection changes `kycStatus` without a new sign-in. Backend `BookingsService.create` is the hard guarantee: ForbiddenException unless `kycStatus === 'VERIFIED'`.
+- The generated Prisma client was stale (predated `licenseBackUrl`) — `npx prisma generate` needed before the API would compile. Worth remembering after any schema-drift sync commit.
+- The Prisma stale-client failure mode is subtle: schema.prisma and migrations were committed earlier (commit 200e9ad) but nothing regenerated the local client.
+
+**Next Actions:** (already in backlog)
+
+- Seed data: existing dummy customer accounts may lack VERIFIED kycStatus — dev quick-login testing of the booking flow will hit the new KYC block unless the seed marks the test user VERIFIED. Check when doing the dummy-user-seed task.
+
+---
+
 ## 2026-07-12 — Iteration 19 (User Profile Self-Edit)
 
 **Goal:** [P1] User profile self-edit — role-aware /profile settings page + PATCH /users/me

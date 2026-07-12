@@ -30,6 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             email: credentials.email as string,
             role: data.data.role,
             apiToken: data.data.accessToken,
+            profileComplete: data.data.profileComplete ?? true,
           };
         } catch {
           return null;
@@ -60,14 +61,40 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: '/login',
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
+      // Client called useSession().update() (e.g. after finishing onboarding) —
+      // re-read live profile state so middleware sees fresh values
+      if (trigger === 'update' && token.apiToken) {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/me`, {
+            headers: { Authorization: `Bearer ${token.apiToken as string}` },
+            cache: 'no-store',
+          });
+          if (res.ok) {
+            const me = (await res.json()).data;
+            token.role = me.role;
+            token.profileComplete =
+              me.role !== 'CUSTOMER' ||
+              !!(me.customerProfile?.licenseUrl && me.customerProfile?.licenseBackUrl);
+          }
+        } catch {
+          // keep existing token values if the API is unreachable
+        }
+        return token;
+      }
       if (user && account) {
         token.provider = account.provider;
         if (account.provider === 'credentials') {
-          const u = user as { id: string; role: string; apiToken: string };
+          const u = user as {
+            id: string;
+            role: string;
+            apiToken: string;
+            profileComplete: boolean;
+          };
           token.apiToken = u.apiToken;
           token.role = u.role;
           token.userId = u.id;
+          token.profileComplete = u.profileComplete;
         } else {
           // Exchange SSO token for our own API JWT on first sign-in
           try {
@@ -87,6 +114,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               token.apiToken = data.data.accessToken;
               token.role = data.data.role;
               token.userId = data.data.userId;
+              token.profileComplete = data.data.profileComplete ?? true;
             }
           } catch {
             // API unavailable during build/dev startup — token missing until next sign-in
@@ -99,6 +127,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.id = token.userId as string;
       session.user.role = token.role as string;
       session.apiToken = token.apiToken as string;
+      session.profileComplete = token.profileComplete !== false;
       return session;
     },
   },

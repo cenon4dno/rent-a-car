@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
-import { getVehicle } from '@/lib/api';
+import { auth } from '@/auth';
+import { getMe, getVehicle } from '@/lib/api';
 import { ReviewClient } from './ReviewClient';
 
 interface ReviewPageProps {
@@ -17,6 +18,18 @@ export default async function BookingReviewPage({ searchParams }: ReviewPageProp
 
   if (!params.vehicleId || !params.startDate || !params.endDate || !params.pickupLocation) {
     redirect('/search');
+  }
+
+  // Live KYC check (the middleware gate relies on the session JWT, which can
+  // lag behind admin approvals/rejections)
+  const session = await auth();
+  const me = session ? await getMe(session.apiToken).catch(() => null) : null;
+  if (me?.data?.role === 'CUSTOMER') {
+    const cp = me.data.customerProfile;
+    const docsComplete = !!(cp?.licenseUrl && cp?.licenseBackUrl);
+    if (!docsComplete || me.data.kycStatus !== 'VERIFIED') {
+      redirect('/onboarding');
+    }
   }
 
   const result = await getVehicle(params.vehicleId).catch(() => null);

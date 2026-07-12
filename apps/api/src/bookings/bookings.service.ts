@@ -50,8 +50,14 @@ export class BookingsService {
 
       const customerProfile = await tx.customerProfile.findUnique({
         where: { userId: customerId },
+        include: { user: { select: { kycStatus: true } } },
       });
       if (!customerProfile) throw new ForbiddenException('Customer profile not found');
+      if (customerProfile.user.kycStatus !== 'VERIFIED') {
+        throw new ForbiddenException(
+          'Your account must pass KYC verification before booking. Upload your driver’s license and wait for admin approval.',
+        );
+      }
 
       const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
       const baseAmount = days * vehicle.dailyRate;

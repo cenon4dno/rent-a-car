@@ -43,7 +43,9 @@ export class UsersService {
         avatarUrl: input.image,
         role: 'CUSTOMER',
         kycStatus: 'PENDING',
+        customerProfile: { create: {} },
       },
+      include: { customerProfile: true },
     });
   }
 
@@ -52,7 +54,7 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email }, include: { customerProfile: true } });
   }
 
   async getMe(userId: string) {
@@ -140,6 +142,11 @@ export class UsersService {
 
     const customerField = CUSTOMER_DOC_FIELDS[docType];
     const renterField = RENTER_DOC_FIELDS[docType];
+
+    // Customers who signed up before profiles were auto-created may lack one
+    if (customerField && user.role === 'CUSTOMER' && !user.customerProfile) {
+      user.customerProfile = await this.ensureCustomerProfile(userId);
+    }
 
     if (customerField && user.customerProfile) {
       await this.prisma.customerProfile.update({

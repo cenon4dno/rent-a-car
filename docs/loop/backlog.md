@@ -3,7 +3,6 @@
 ## Active
 
 - [ ] [P2] Google Maps pick-up location pin — integrate Google Maps JavaScript API on the booking flow pick-up location field; replace free-text input with an interactive map picker (autocomplete search + draggable marker) that stores a precise lat/lng + formatted address; display the pinned location on the booking confirmation ticket
-- [ ] [P1] Post-SSO user registration & driver's license KYC — after a User signs in via Google, Microsoft, or Facebook for the first time, redirect to a mandatory profile completion page before accessing any booking feature; require upload of driver's license front image and driver's license back image; store both images (Azure Blob or local in dev); mark the account as pending-KYC until an Admin approves; block booking attempts if KYC status is not approved
 - [ ] [P2] Vehicle operating location field + search filter — add an `operatingLocation` field (city/area text + lat/lng via Google Maps autocomplete) to the Vehicle schema, vehicle creation form, and vehicle edit form; expose the field in the vehicles search API as an optional filter param; add a Location filter input to the search results page FilterSidebar so users can narrow results by where the rental operates
 - [ ] [P2] Dummy user seed + dev quick login — seed a dummy customer account (e.g. name: "Juan dela Cruz", email: testuser@dev.local, password in DEV_USER_SEED_PASSWORD env var) via the Prisma seed script; add a "Login as Test User" quick-login button on the login page that is only rendered when NODE_ENV=development, so developers can sign in instantly without going through SSO
 - [ ] [P2] Dummy driver seed + dev quick login — seed a dummy driver account (e.g. name: "Pedro Santos", email: testdriver@dev.local, password in DEV_DRIVER_SEED_PASSWORD env var, role: DRIVER) via the Prisma seed script; add a "Login as Test Driver" quick-login button on the login page rendered only when NODE_ENV=development
@@ -21,6 +20,7 @@ _(none)_
 
 ## Completed
 
+- [x] [P1] Post-SSO user registration & driver's license KYC — /onboarding page (license front/back upload, pending-approval state); profileComplete in session JWT + middleware gate on /booking*; live KYC re-check on /booking/review; backend blocks booking create unless kycStatus VERIFIED; CustomerProfile auto-created on SSO signup — 2026-07-12
 - [x] [P1] User profile self-edit — /profile settings page (role-aware fields, avatar/logo upload, document re-upload, change-password); PATCH /users/me + /users/me/password — 2026-07-12
 - [x] [P4] Third-party KYC verification — KycModule with Onfido + Veriff integration stubs; webhook endpoints with HMAC signature verification; KYC_PROVIDER env var switch — 2026-07-05
 - [x] [P4] Footer "Created by u2i" credit — 2026-07-05

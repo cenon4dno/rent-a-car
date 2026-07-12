@@ -25,6 +25,7 @@ export class AuthService {
       accessToken: this.jwtService.sign(payload),
       userId: user.id,
       role: user.role,
+      profileComplete: this.isProfileComplete(user),
     };
   }
 
@@ -42,7 +43,18 @@ export class AuthService {
       accessToken: this.jwtService.sign(payload),
       userId: user.id,
       role: user.role,
+      profileComplete: this.isProfileComplete(user),
     };
+  }
+
+  // Customers must have both sides of their driver's license on file before
+  // the web app lets them into the booking flow
+  private isProfileComplete(user: {
+    role: string;
+    customerProfile?: { licenseUrl: string | null; licenseBackUrl: string | null } | null;
+  }) {
+    if (user.role !== 'CUSTOMER') return true;
+    return !!(user.customerProfile?.licenseUrl && user.customerProfile?.licenseBackUrl);
   }
 
   async validateJwtPayload(payload: { sub: string; email: string; role: string }) {
