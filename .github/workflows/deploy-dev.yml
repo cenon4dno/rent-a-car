@@ -61,7 +61,8 @@ jobs:
           slot-name: ${{ env.AZURE_SLOT_API }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API_DEV }}
           package: apps/api
-          startup-command: node dist/main.js
+          # startup-command is unsupported with publish-profile auth;
+          # set "node dist/main.js" in the slot's Startup Command in the Azure portal
 
   deploy-web:
     name: Deploy Web (Dev)
@@ -95,4 +96,5 @@ jobs:
           slot-name: ${{ env.AZURE_SLOT_WEB }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_WEB_DEV }}
           package: apps/web
-          startup-command: node server.js
+          # startup-command is unsupported with publish-profile auth;
+          # set "node server.js" in the slot's Startup Command in the Azure portal
