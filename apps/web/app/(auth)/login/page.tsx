@@ -188,6 +188,22 @@ function LoginForm() {
               </span>
               <span className="text-gray-400">testuser@dev.local</span>
             </button>
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() =>
+                quickLogin(
+                  'testdriver@dev.local',
+                  process.env.NEXT_PUBLIC_DEV_DRIVER_PASSWORD ?? 'password123',
+                )
+              }
+              className="w-full flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs hover:bg-white transition-colors disabled:opacity-50"
+            >
+              <span className="rounded px-1.5 py-0.5 font-semibold bg-amber-100 text-amber-700">
+                Login as Test Driver
+              </span>
+              <span className="text-gray-400">testdriver@dev.local</span>
+            </button>
             {[
               { label: 'Admin', email: 'cenon4dno@gmail.com', badge: 'bg-red-100 text-red-700' },
               {

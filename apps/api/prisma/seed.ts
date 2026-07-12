@@ -305,7 +305,28 @@ async function main() {
     include: { driverProfile: true },
   });
 
-  console.log('  ✓ Drivers (4)');
+  // Dev quick-login test driver — attached to Metro Car Rentals, fully
+  // verified (see "Login as Test Driver" on the login page)
+  await prisma.user.create({
+    data: {
+      email: 'testdriver@dev.local',
+      name: 'Pedro Santos',
+      role: UserRole.DRIVER,
+      kycStatus: KycStatus.VERIFIED,
+      passwordHash: await bcrypt.hash(process.env.DEV_DRIVER_SEED_PASSWORD || 'password123', 10),
+      avatarUrl: 'https://i.pravatar.cc/150?u=pedro.santos',
+      driverProfile: {
+        create: {
+          renterId: metro.id,
+          licenseUrl: 'https://example.com/docs/pedro-license.jpg',
+          backgroundCheckUrl: 'https://example.com/docs/pedro-bgcheck.pdf',
+          kycStatus: KycStatus.VERIFIED,
+        },
+      },
+    },
+  });
+
+  console.log('  ✓ Drivers (5)');
 
   // ── Vehicles ───────────────────────────────────────────────────────────────
   // Metro Car Rentals — economy & mid-range (7 vehicles)
@@ -749,6 +770,7 @@ async function main() {
   console.log(`  Manuel Garcia         ${d2.email}  (Metro, UNDER_REVIEW)`);
   console.log(`  Susan Lim             ${d3.email}  (Island, VERIFIED)`);
   console.log(`  Carlos Mendoza        ${d4.email}  (Premier, VERIFIED)`);
+  console.log(`  Pedro Santos          testdriver@dev.local  (Metro, VERIFIED, dev quick login)`);
   console.log('\n── Vehicles (17) ───────────────────────────────────');
   console.log('  Metro Car Rentals (7)');
   console.log('    Toyota Vios           ABC-1234  ₱2,500/day  [AVAILABLE]');

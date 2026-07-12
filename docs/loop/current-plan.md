@@ -1,3 +1,3 @@
 # Current Plan
 
-_(No active plan — iteration 20 complete. Next top items: [P2] Google Maps pick-up location pin, [P2] Vehicle operating location field + search filter, [P2] dummy user/driver seeds + dev quick login.)_
+_(No active plan — iteration 21 complete. Next candidates: [P2] Role-aware Navbar (small, no external deps); [P2] Google Maps pick-up pin / operating location / hero autocomplete (need GOOGLE_MAPS_API_KEY provisioned); [P1] none remaining.)_
