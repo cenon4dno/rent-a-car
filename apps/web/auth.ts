@@ -6,6 +6,9 @@ import Apple from 'next-auth/providers/apple';
 import Facebook from 'next-auth/providers/facebook';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // required on non-Vercel hosts (Azure App Service); without it every auth
+  // request fails with UntrustedHost
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {
