@@ -29,11 +29,23 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      - name: Prepare DATABASE_URL for migrations
+        run: |
+          DB_URL='${{ secrets.DEV_DATABASE_URL }}'
+          echo "Preparing DATABASE_URL for prisma migrate"
+          if [[ -z "$DB_URL" ]]; then
+            echo "DATABASE_URL=file:./prisma/dev.db" >> $GITHUB_ENV
+          elif [[ "$DB_URL" == file:/* ]]; then
+            # Absolute file paths (e.g. App Service /home/site) are not writable on the GitHub runner; use a local sqlite file for CI
+            echo "DATABASE_URL=file:./prisma/dev.db" >> $GITHUB_ENV
+          else
+            echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+          fi
+        shell: bash
+
       - name: Run Prisma migrations
         run: npx prisma migrate deploy
         working-directory: apps/api
-        env:
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
 
       - name: Build API
         run: npm run build --workspace=@rent-a-car/api
