@@ -1,5 +1,21 @@
 # Observations Log
 
+## 2026-07-12 — Iteration 22 (Role-Aware Navbar)
+
+**Goal:** [P2] Role-aware Navbar — hide onboarding links for signed-in users, role-specific dashboards for staff roles
+**Outcome:** Done
+**Findings:**
+
+- Nav links centralized in `navLinksForRole(role, authenticated)` used by both the desktop and mobile menus — the two menus had drifted before (mobile lacked the profile link).
+- ADMIN gets Dashboard/Users/Disputes, RENTER gets Dashboard/Fleet/Bookings, DRIVER gets My Profile (no driver dashboard exists yet — worth a backlog item if drivers need schedules/earnings), customers keep only Browse Cars.
+- My Bookings + KYC links now render only for customers (KYC also for renters); previously every role saw customer-centric links.
+
+**Next Actions:** (added to backlog)
+
+- Driver dashboard (schedule, assigned vehicle, earnings) — currently DRIVER role has only the profile page.
+
+---
+
 ## 2026-07-12 — Iteration 21 (Dev Seed Accounts + Quick Login)
 
 **Goal:** [P2] Dummy user seed + dev quick login; [P2] Dummy driver seed + dev quick login

@@ -5,9 +5,43 @@ import { useSession, signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 
+// Public marketing links are onboarding-only: hidden once signed in, except
+// Browse Cars which stays for customers. Staff roles see their own dashboards.
+function navLinksForRole(role: string | undefined, authenticated: boolean) {
+  if (!authenticated) {
+    return [
+      { href: '/search', label: 'Browse Cars' },
+      { href: '/how-it-works', label: 'How It Works' },
+      { href: '/partners', label: 'Partners' },
+    ];
+  }
+  switch (role) {
+    case 'ADMIN':
+      return [
+        { href: '/admin', label: 'Dashboard' },
+        { href: '/admin/users', label: 'Users' },
+        { href: '/admin/disputes', label: 'Disputes' },
+      ];
+    case 'RENTER':
+      return [
+        { href: '/renter', label: 'Dashboard' },
+        { href: '/renter/fleet', label: 'Fleet' },
+        { href: '/renter/bookings', label: 'Bookings' },
+      ];
+    case 'DRIVER':
+      return [{ href: '/profile', label: 'My Profile' }];
+    default:
+      // authenticated customer
+      return [{ href: '/search', label: 'Browse Cars' }];
+  }
+}
+
 export function Navbar() {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const role = (session?.user as { role?: string })?.role;
+  const navLinks = navLinksForRole(role, !!session);
+  const isCustomer = !!session && (!role || role === 'CUSTOMER');
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -43,49 +77,45 @@ export function Navbar() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600">
-            <Link href="/search" className="hover:text-blue-600 transition-colors">
-              Browse Cars
-            </Link>
-            <Link href="/how-it-works" className="hover:text-blue-600 transition-colors">
-              How It Works
-            </Link>
-            <Link href="/partners" className="hover:text-blue-600 transition-colors">
-              Partners
-            </Link>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hover:text-blue-600 transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Auth */}
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <div className="flex items-center gap-3">
-                {(session.user as { role?: string })?.role === 'ADMIN' && (
+                {isCustomer && (
+                  <>
+                    <Link
+                      href="/bookings"
+                      className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                      My Bookings
+                    </Link>
+                    <Link
+                      href="/profile/kyc"
+                      className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                      KYC
+                    </Link>
+                  </>
+                )}
+                {role === 'RENTER' && (
                   <Link
-                    href="/admin"
+                    href="/profile/kyc"
                     className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
                   >
-                    Admin
+                    KYC
                   </Link>
                 )}
-                {(session.user as { role?: string })?.role === 'RENTER' && (
-                  <Link
-                    href="/renter"
-                    className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                )}
-                <Link
-                  href="/bookings"
-                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  My Bookings
-                </Link>
-                <Link
-                  href="/profile/kyc"
-                  className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  KYC
-                </Link>
                 <Link href="/profile" className="text-sm text-gray-700 hover:text-blue-600">
                   {session.user?.name?.split(' ')[0]}
                 </Link>
@@ -136,39 +166,36 @@ export function Navbar() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden py-4 border-t border-gray-100 space-y-3">
-            <Link href="/search" className="block text-sm text-gray-700 hover:text-blue-600 py-1">
-              Browse Cars
-            </Link>
-            <Link
-              href="/how-it-works"
-              className="block text-sm text-gray-700 hover:text-blue-600 py-1"
-            >
-              How It Works
-            </Link>
-            <Link href="/partners" className="block text-sm text-gray-700 hover:text-blue-600 py-1">
-              Partners
-            </Link>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="block text-sm text-gray-700 hover:text-blue-600 py-1"
+              >
+                {link.label}
+              </Link>
+            ))}
             <div className="pt-2 flex flex-col gap-2">
               {session ? (
                 <>
-                  {(session.user as { role?: string })?.role === 'ADMIN' && (
-                    <Link href="/admin" className="text-sm text-gray-700 hover:text-blue-600 py-1">
-                      Admin
+                  {isCustomer && (
+                    <Link
+                      href="/bookings"
+                      className="text-sm text-gray-700 hover:text-blue-600 py-1"
+                    >
+                      My Bookings
                     </Link>
                   )}
-                  {(session.user as { role?: string })?.role === 'RENTER' && (
-                    <Link href="/renter" className="text-sm text-gray-700 hover:text-blue-600 py-1">
-                      Dashboard
+                  {(isCustomer || role === 'RENTER') && (
+                    <Link
+                      href="/profile/kyc"
+                      className="text-sm text-gray-700 hover:text-blue-600 py-1"
+                    >
+                      KYC Documents
                     </Link>
                   )}
-                  <Link href="/bookings" className="text-sm text-gray-700 hover:text-blue-600 py-1">
-                    My Bookings
-                  </Link>
-                  <Link
-                    href="/profile/kyc"
-                    className="text-sm text-gray-700 hover:text-blue-600 py-1"
-                  >
-                    KYC Documents
+                  <Link href="/profile" className="text-sm text-gray-700 hover:text-blue-600 py-1">
+                    Profile Settings
                   </Link>
                   <Button
                     variant="secondary"
