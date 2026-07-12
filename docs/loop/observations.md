@@ -1,5 +1,24 @@
 # Observations Log
 
+## 2026-07-12 — Iteration 19 (User Profile Self-Edit)
+
+**Goal:** [P1] User profile self-edit — role-aware /profile settings page + PATCH /users/me
+**Outcome:** Done
+**Findings:**
+
+- `PATCH /users/me` and `PATCH /users/me/password` added to UsersController; user id always comes from the JWT (`req.user.id`), never the body, so ownership is enforced by construction.
+- `getMe()` previously returned the raw Prisma user including `passwordHash` to the frontend — now stripped and replaced with a `hasPassword` boolean. The change-password form uses it to decide whether to require the current password (SSO-only accounts can set a first password without one).
+- Renter fields (`companyName`, `taxIdNumber`, `bankAccountDetails`) update via nested `renterProfile: { update: ... }` in a single `prisma.user.update` — only applied when the user actually has a RenterProfile, so a CUSTOMER sending renter fields is a silent no-op.
+- DocumentType extended with `avatar` (writes `User.avatarUrl`, doubles as the renter company logo — no schema change needed) and `licenseBack` (`CustomerProfile.licenseBackUrl`, also unblocks the post-SSO KYC backlog item). `license` now routes to `DriverProfile.licenseUrl` when the account has a driver profile.
+- The Navbar already linked the user's name to `/profile` but no page existed (dead link) — the new settings page fills it. KycUploader was reusable as-is for the document re-upload sections.
+- ADMIN role sees no documents section on /profile (no customer/renter/driver profile to attach documents to).
+
+**Next Actions:** (already in backlog)
+
+- [P1] Post-SSO registration & driver's license KYC — `licenseBack` upload type added this iteration is a prerequisite now in place.
+
+---
+
 ## 2026-06-29 — Iteration 18 (Email/Password Login + Home Page Live API)
 
 **Goal:** Add email/password login alongside SSO; seed admin account; wire home page to live API data

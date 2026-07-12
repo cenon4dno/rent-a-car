@@ -498,11 +498,14 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   avatarUrl: string | null;
   role: string;
   kycStatus: string;
+  hasPassword?: boolean;
   customerProfile: {
     licenseUrl: string | null;
+    licenseBackUrl: string | null;
     secondaryIdUrl: string | null;
     kycStatus: string;
   } | null;
@@ -511,8 +514,40 @@ export interface UserProfile {
     businessPermitUrl: string | null;
     companyRegUrl: string | null;
     taxIdNumber: string | null;
+    bankAccountDetails: string | null;
     trustBadge: string;
   } | null;
+  driverProfile: {
+    licenseUrl: string | null;
+    kycStatus: string;
+  } | null;
+}
+
+export interface UpdateMeInput {
+  name?: string;
+  phone?: string;
+  companyName?: string;
+  taxIdNumber?: string;
+  bankAccountDetails?: string;
+}
+
+export async function updateMe(input: UpdateMeInput, token: string) {
+  return apiFetch<ApiResponse<UserProfile>>(`/users/me`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function changePassword(
+  input: { currentPassword?: string; newPassword: string },
+  token: string,
+) {
+  return apiFetch<ApiResponse<{ changed: boolean }>>(`/users/me/password`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(input),
+  });
 }
 
 export async function getMe(token: string) {

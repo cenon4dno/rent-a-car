@@ -1,5 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { UpdateMeDto } from './dto/update-me.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 interface SsoUpsertInput {
   provider: string;
@@ -9,10 +12,12 @@ interface SsoUpsertInput {
   image?: string;
 }
 
-export type DocumentType = 'license' | 'secondaryId' | 'businessPermit' | 'companyReg';
+export type DocumentType =
+  'license' | 'licenseBack' | 'secondaryId' | 'businessPermit' | 'companyReg' | 'avatar';
 
 const CUSTOMER_DOC_FIELDS: Partial<Record<DocumentType, string>> = {
   license: 'licenseUrl',
+  licenseBack: 'licenseBackUrl',
   secondaryId: 'secondaryIdUrl',
 };
 
@@ -51,7 +56,7 @@ export class UsersService {
   }
 
   async getMe(userId: string) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         customerProfile: true,
@@ -59,14 +64,79 @@ export class UsersService {
         driverProfile: true,
       },
     });
+    if (!user) return null;
+    const { passwordHash, ...rest } = user;
+    return { ...rest, hasPassword: !!passwordHash };
+  }
+
+  async updateMe(userId: string, dto: UpdateMeDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { renterProfile: true },
+    });
+    if (!user) throw new BadRequestException('User not found');
+
+    const userData: { name?: string; phone?: string } = {};
+    if (dto.name !== undefined) userData.name = dto.name;
+    if (dto.phone !== undefined) userData.phone = dto.phone;
+
+    const renterData: { companyName?: string; taxIdNumber?: string; bankAccountDetails?: string } =
+      {};
+    if (user.renterProfile) {
+      if (dto.companyName !== undefined) renterData.companyName = dto.companyName;
+      if (dto.taxIdNumber !== undefined) renterData.taxIdNumber = dto.taxIdNumber;
+      if (dto.bankAccountDetails !== undefined)
+        renterData.bankAccountDetails = dto.bankAccountDetails;
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...userData,
+        ...(Object.keys(renterData).length > 0 ? { renterProfile: { update: renterData } } : {}),
+      },
+      include: { customerProfile: true, renterProfile: true, driverProfile: true },
+    });
+    const { passwordHash, ...rest } = updated;
+    return { ...rest, hasPassword: !!passwordHash };
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException('User not found');
+
+    if (user.passwordHash) {
+      if (!dto.currentPassword) {
+        throw new BadRequestException('Current password is required');
+      }
+      const valid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+      if (!valid) throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+    return { changed: true };
   }
 
   async updateDocumentUrl(userId: string, docType: DocumentType, fileUrl: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { customerProfile: true, renterProfile: true },
+      include: { customerProfile: true, renterProfile: true, driverProfile: true },
     });
     if (!user) throw new BadRequestException('User not found');
+
+    if (docType === 'avatar') {
+      await this.prisma.user.update({ where: { id: userId }, data: { avatarUrl: fileUrl } });
+      return { fileUrl };
+    }
+
+    if (docType === 'license' && user.driverProfile) {
+      await this.prisma.driverProfile.update({
+        where: { userId },
+        data: { licenseUrl: fileUrl },
+      });
+      return { fileUrl };
+    }
 
     const customerField = CUSTOMER_DOC_FIELDS[docType];
     const renterField = RENTER_DOC_FIELDS[docType];
