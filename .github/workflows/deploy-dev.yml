@@ -72,8 +72,9 @@ jobs:
             version: pkg.version,
             private: true,
             scripts: {
-              // migrate the on-server database before boot; never block startup on it
-              start: "(npx prisma migrate deploy || echo 'WARN: prisma migrate deploy failed') && node dist/main.js",
+              // migrate the on-server database before boot; never block startup on it.
+              // nest build emits dist/src/main.js (prisma/*.ts is compiled too, keeping the src/ prefix)
+              start: "(npx prisma migrate deploy || echo 'WARN: prisma migrate deploy failed') && node dist/src/main.js",
             },
             dependencies: pkg.dependencies,
           }, null, 2));
