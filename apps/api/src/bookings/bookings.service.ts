@@ -76,6 +76,8 @@ export class BookingsService {
           renterId: vehicle.renterId,
           driverId: dto.driverId ?? null,
           pickupLocation: dto.pickupLocation,
+          pickupLat: dto.pickupLat ?? null,
+          pickupLng: dto.pickupLng ?? null,
           startDate: start,
           endDate: end,
           dailyRate: vehicle.dailyRate,

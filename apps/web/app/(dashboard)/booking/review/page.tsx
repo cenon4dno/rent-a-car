@@ -7,6 +7,8 @@ interface ReviewPageProps {
   searchParams: Promise<{
     vehicleId?: string;
     pickupLocation?: string;
+    pickupLat?: string;
+    pickupLng?: string;
     startDate?: string;
     endDate?: string;
     addons?: string;
@@ -52,6 +54,8 @@ export default async function BookingReviewPage({ searchParams }: ReviewPageProp
             renterName: vehicle.renter.companyName,
           }}
           pickupLocation={params.pickupLocation}
+          pickupLat={params.pickupLat ? Number(params.pickupLat) : undefined}
+          pickupLng={params.pickupLng ? Number(params.pickupLng) : undefined}
           startDate={params.startDate}
           endDate={params.endDate}
           addons={addons}

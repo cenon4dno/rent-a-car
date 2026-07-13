@@ -1,4 +1,4 @@
-import { IsString, IsDateString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsDateString, IsOptional, IsBoolean, IsNumber } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBookingDto {
@@ -9,6 +9,16 @@ export class CreateBookingDto {
   @ApiProperty({ example: '123 Main St, Manila' })
   @IsString()
   pickupLocation: string;
+
+  @ApiPropertyOptional({ example: 14.5547, description: 'Pinned pick-up latitude' })
+  @IsOptional()
+  @IsNumber()
+  pickupLat?: number;
+
+  @ApiPropertyOptional({ example: 121.0244, description: 'Pinned pick-up longitude' })
+  @IsOptional()
+  @IsNumber()
+  pickupLng?: number;
 
   @ApiProperty({ example: '2026-07-01T08:00:00.000Z' })
   @IsDateString()

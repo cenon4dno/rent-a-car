@@ -159,7 +159,8 @@ export default async function BookingDetailPage({ params }: BookingPageProps) {
           </div>
         </div>
 
-        {/* Pickup Map */}
+        {/* Pickup Map — exact pinned coordinates when the booking has them,
+            otherwise a Metro Manila overview */}
         <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-900">Pickup Location</p>
@@ -170,7 +171,11 @@ export default async function BookingDetailPage({ params }: BookingPageProps) {
             width="100%"
             height="220"
             style={{ border: 0 }}
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=120.9,14.5,121.1,14.7&layer=mapnik&marker=14.6,121.0`}
+            src={
+              b.pickupLat != null && b.pickupLng != null
+                ? `https://www.openstreetmap.org/export/embed.html?bbox=${b.pickupLng - 0.01},${b.pickupLat - 0.006},${b.pickupLng + 0.01},${b.pickupLat + 0.006}&layer=mapnik&marker=${b.pickupLat},${b.pickupLng}`
+                : `https://www.openstreetmap.org/export/embed.html?bbox=120.9,14.5,121.1,14.7&layer=mapnik&marker=14.6,121.0`
+            }
             loading="lazy"
           />
         </div>

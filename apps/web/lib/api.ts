@@ -172,6 +172,8 @@ export interface BookingDetail {
   id: string;
   vehicleId: string;
   pickupLocation: string;
+  pickupLat?: number | null;
+  pickupLng?: number | null;
   startDate: string;
   endDate: string;
   dailyRate: number;
@@ -191,6 +193,8 @@ export async function createBooking(
   body: {
     vehicleId: string;
     pickupLocation: string;
+    pickupLat?: number;
+    pickupLng?: number;
     startDate: string;
     endDate: string;
     driverId?: string;

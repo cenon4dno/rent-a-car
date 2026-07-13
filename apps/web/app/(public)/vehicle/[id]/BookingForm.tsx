@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
+import { MapLocationPicker } from '@/components/ui/MapLocationPicker';
+import type { LocationValue } from '@/lib/googleMaps';
 
 interface BookingFormProps {
   vehicleId: string;
@@ -32,7 +34,9 @@ export function BookingForm({
 
   const today = new Date().toISOString().split('T')[0];
 
-  const [pickupLocation, setPickupLocation] = useState(initialLocation);
+  const [pickupLocation, setPickupLocation] = useState<LocationValue>({
+    address: initialLocation,
+  });
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
   const [selectedAddons, setSelectedAddons] = useState<Set<string>>(new Set());
@@ -67,7 +71,7 @@ export function BookingForm({
     });
   };
 
-  const isValid = Boolean(pickupLocation && startDate && endDate && days > 0);
+  const isValid = Boolean(pickupLocation.address && startDate && endDate && days > 0);
 
   const handleProceed = () => {
     if (status === 'unauthenticated') {
@@ -76,11 +80,15 @@ export function BookingForm({
     }
     const qs = new URLSearchParams({
       vehicleId,
-      pickupLocation,
+      pickupLocation: pickupLocation.address,
       startDate,
       endDate,
       addons: [...selectedAddons].join(','),
     });
+    if (pickupLocation.lat !== undefined && pickupLocation.lng !== undefined) {
+      qs.set('pickupLat', String(pickupLocation.lat));
+      qs.set('pickupLng', String(pickupLocation.lng));
+    }
     router.push(`/booking/review?${qs.toString()}`);
   };
 
@@ -93,13 +101,12 @@ export function BookingForm({
         <label className="block text-xs font-medium text-gray-600 mb-1.5" htmlFor="pickup">
           Pick-up Location
         </label>
-        <input
+        <MapLocationPicker
           id="pickup"
-          type="text"
           value={pickupLocation}
-          onChange={(e) => setPickupLocation(e.target.value)}
+          onChange={setPickupLocation}
           placeholder="e.g. Makati City"
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          inputClassName="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
 

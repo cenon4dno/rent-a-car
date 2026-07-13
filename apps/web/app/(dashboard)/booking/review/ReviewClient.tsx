@@ -31,6 +31,8 @@ interface ReviewClientProps {
     renterName: string;
   };
   pickupLocation: string;
+  pickupLat?: number;
+  pickupLng?: number;
   startDate: string;
   endDate: string;
   addons: string[];
@@ -39,6 +41,8 @@ interface ReviewClientProps {
 export function ReviewClient({
   vehicle,
   pickupLocation,
+  pickupLat,
+  pickupLng,
   startDate,
   endDate,
   addons,
@@ -75,6 +79,8 @@ export function ReviewClient({
         {
           vehicleId: vehicle.id,
           pickupLocation,
+          pickupLat,
+          pickupLng,
           startDate: new Date(startDate).toISOString(),
           endDate: new Date(endDate).toISOString(),
           childSeat: addons.includes('childSeat'),
