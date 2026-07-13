@@ -3,10 +3,12 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from './Button';
+import { LocationAutocomplete } from './LocationAutocomplete';
+import type { LocationValue } from '@/lib/googleMaps';
 
 export function SearchWidget() {
   const router = useRouter();
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState<LocationValue>({ address: '' });
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -15,7 +17,11 @@ export function SearchWidget() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (location) params.set('location', location);
+    if (location.address) params.set('location', location.address);
+    if (location.lat !== undefined && location.lng !== undefined) {
+      params.set('lat', String(location.lat));
+      params.set('lng', String(location.lng));
+    }
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
     router.push(`/search?${params.toString()}`);
@@ -54,12 +60,11 @@ export function SearchWidget() {
               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
-          <input
+          <LocationAutocomplete
             id="location"
-            type="text"
             placeholder="City or area"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            value={location.address}
+            onChange={setLocation}
             className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
