@@ -30,6 +30,7 @@ export class VehiclesService {
     const {
       startDate,
       endDate,
+      location,
       fuelType,
       transmission,
       minSeats,
@@ -39,6 +40,11 @@ export class VehiclesService {
       page = 1,
       limit = 20,
     } = dto;
+
+    // Autocomplete sends full addresses ("Makati, Metro Manila, Philippines");
+    // match on the leading city/area token so stored locations don't need to
+    // be substring-identical
+    const locationToken = location?.split(',')[0]?.trim();
 
     const bookedVehicleIds =
       startDate && endDate
@@ -66,6 +72,7 @@ export class VehiclesService {
       dailyRate: { gte: minPrice ?? undefined, lte: maxPrice ?? undefined },
       // SQLite: tags is stored as JSON string — use contains for tag filter
       tags: tag ? { contains: tag } : undefined,
+      operatingLocation: locationToken ? { contains: locationToken } : undefined,
     };
 
     const [data, total] = await this.prisma.$transaction([

@@ -11,6 +11,7 @@ import {
   type RegistrationDocs,
 } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
+import { LocationAutocomplete } from '@/components/ui/LocationAutocomplete';
 
 interface VehicleFormProps {
   mode: 'create' | 'edit';
@@ -88,6 +89,9 @@ export function VehicleForm({ mode, vehicleId, initial = {} }: VehicleFormProps)
     seatingCapacity: initial.seatingCapacity ?? 5,
     dailyRate: initial.dailyRate ?? 0,
     mileageLimit: initial.mileageLimit,
+    operatingLocation: initial.operatingLocation ?? '',
+    operatingLat: initial.operatingLat,
+    operatingLng: initial.operatingLng,
   });
 
   function toggleTag(t: string) {
@@ -265,6 +269,22 @@ export function VehicleForm({ mode, vehicleId, initial = {} }: VehicleFormProps)
           />
         </Field>
       </div>
+
+      <Field label="Operating Location">
+        <LocationAutocomplete
+          placeholder="City or area where this vehicle operates"
+          value={form.operatingLocation ?? ''}
+          onChange={({ address, lat, lng }) =>
+            setForm((f) => ({
+              ...f,
+              operatingLocation: address,
+              operatingLat: lat,
+              operatingLng: lng,
+            }))
+          }
+          className={inputCls}
+        />
+      </Field>
 
       <Field label="Description">
         <textarea

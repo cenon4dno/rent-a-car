@@ -153,6 +153,8 @@ model Vehicle {
   registrationDocs String           @default("{}")
   tags             String           @default("[]")
   operatingLocation String?
+  operatingLat     Float?
+  operatingLng     Float?
   status           VehicleStatus    @default(AVAILABLE)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt

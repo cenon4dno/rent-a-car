@@ -36,6 +36,10 @@ export default async function EditVehiclePage({ params }: EditVehiclePageProps) 
           seatingCapacity: v.seatingCapacity,
           dailyRate: v.dailyRate,
           mileageLimit: v.mileageLimit ?? undefined,
+          operatingLocation:
+            (v as { operatingLocation?: string | null }).operatingLocation ?? undefined,
+          operatingLat: (v as { operatingLat?: number | null }).operatingLat ?? undefined,
+          operatingLng: (v as { operatingLng?: number | null }).operatingLng ?? undefined,
           tags: (() => {
             try {
               const t = JSON.parse((v as { tags?: string }).tags ?? '[]');

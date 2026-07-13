@@ -3,6 +3,8 @@
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useState, useCallback, Fragment } from 'react';
 import { Button } from './Button';
+import { LocationAutocomplete } from './LocationAutocomplete';
+import type { LocationValue } from '@/lib/googleMaps';
 
 const USE_CASE_TAGS = [
   { value: 'Wedding', emoji: '💍' },
@@ -39,6 +41,9 @@ export function FilterSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const [location, setLocation] = useState<LocationValue>({
+    address: searchParams.get('location') ?? '',
+  });
   const [tag, setTag] = useState(searchParams.get('tag') ?? '');
   const [fuelType, setFuelType] = useState(searchParams.get('fuelType') ?? '');
   const [transmission, setTransmission] = useState(searchParams.get('transmission') ?? '');
@@ -48,6 +53,15 @@ export function FilterSidebar() {
 
   const applyFilters = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
+    if (location.address) params.set('location', location.address);
+    else params.delete('location');
+    if (location.lat !== undefined && location.lng !== undefined) {
+      params.set('lat', String(location.lat));
+      params.set('lng', String(location.lng));
+    } else {
+      params.delete('lat');
+      params.delete('lng');
+    }
     if (tag) params.set('tag', tag);
     else params.delete('tag');
     if (fuelType) params.set('fuelType', fuelType);
@@ -63,9 +77,21 @@ export function FilterSidebar() {
     params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
     setMobileOpen(false);
-  }, [tag, fuelType, transmission, minSeats, minPrice, maxPrice, searchParams, router, pathname]);
+  }, [
+    location,
+    tag,
+    fuelType,
+    transmission,
+    minSeats,
+    minPrice,
+    maxPrice,
+    searchParams,
+    router,
+    pathname,
+  ]);
 
   const clearFilters = useCallback(() => {
+    setLocation({ address: '' });
     setTag('');
     setFuelType('');
     setTransmission('');
@@ -73,10 +99,8 @@ export function FilterSidebar() {
     setMinPrice('');
     setMaxPrice('');
     const params = new URLSearchParams();
-    const location = searchParams.get('location');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    if (location) params.set('location', location);
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
     router.push(`${pathname}?${params.toString()}`);
@@ -84,11 +108,23 @@ export function FilterSidebar() {
   }, [searchParams, router, pathname]);
 
   const hasActiveFilters = Boolean(
-    tag || fuelType || transmission || minSeats || minPrice || maxPrice,
+    location.address || tag || fuelType || transmission || minSeats || minPrice || maxPrice,
   );
 
   const filterContent = (
     <div className="space-y-6">
+      <div>
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          Location
+        </h4>
+        <LocationAutocomplete
+          placeholder="City or area"
+          value={location.address}
+          onChange={setLocation}
+          className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
       <div>
         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
           Use Case

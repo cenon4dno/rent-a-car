@@ -14,10 +14,22 @@ export class SearchVehicleDto {
   @IsDateString()
   endDate?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Filter by operating location (city/area name)' })
   @IsOptional()
   @IsString()
   location?: string;
+
+  @ApiPropertyOptional({ description: 'Latitude of the searched location (reserved for ranking)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lat?: number;
+
+  @ApiPropertyOptional({ description: 'Longitude of the searched location (reserved for ranking)' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lng?: number;
 
   @ApiPropertyOptional({ enum: FuelType })
   @IsOptional()

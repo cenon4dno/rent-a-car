@@ -7,6 +7,8 @@ import { Pagination } from '@/components/ui/Pagination';
 interface SearchPageProps {
   searchParams: Promise<{
     location?: string;
+    lat?: string;
+    lng?: string;
     startDate?: string;
     endDate?: string;
     fuelType?: string;
@@ -27,6 +29,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const result = await searchVehicles({
     location: params.location,
+    lat: params.lat ? Number(params.lat) : undefined,
+    lng: params.lng ? Number(params.lng) : undefined,
     startDate: params.startDate,
     endDate: params.endDate,
     fuelType: params.fuelType,

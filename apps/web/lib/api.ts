@@ -97,6 +97,8 @@ export interface VehicleSearchParams {
   startDate?: string;
   endDate?: string;
   location?: string;
+  lat?: number;
+  lng?: number;
   fuelType?: string;
   transmission?: string;
   minSeats?: number;
@@ -308,6 +310,9 @@ export interface CreateVehicleBody {
   vehiclePhotos?: Partial<VehiclePhotos>;
   registrationDocs?: Partial<RegistrationDocs>;
   tags?: string[];
+  operatingLocation?: string;
+  operatingLat?: number;
+  operatingLng?: number;
 }
 
 export async function getMyVehicles(token: string) {

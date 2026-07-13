@@ -76,4 +76,22 @@ export class CreateVehicleDto {
   })
   @IsOptional()
   tags?: string[];
+
+  @ApiPropertyOptional({
+    description: 'City or area where the vehicle operates',
+    example: 'Makati, Metro Manila, Philippines',
+  })
+  @IsOptional()
+  @IsString()
+  operatingLocation?: string;
+
+  @ApiPropertyOptional({ example: 14.5547 })
+  @IsOptional()
+  @IsNumber()
+  operatingLat?: number;
+
+  @ApiPropertyOptional({ example: 121.0244 })
+  @IsOptional()
+  @IsNumber()
+  operatingLng?: number;
 }
