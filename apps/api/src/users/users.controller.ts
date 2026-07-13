@@ -27,6 +27,7 @@ const VALID_DOC_TYPES: DocumentType[] = [
   'secondaryId',
   'businessPermit',
   'companyReg',
+  'backgroundCheck',
   'avatar',
 ];
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'application/pdf'];

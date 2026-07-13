@@ -1,8 +1,7 @@
-import Link from 'next/link';
 import { auth } from '@/auth';
 import { getMe } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
-import { KycUploader } from './kyc/KycUploader';
+import { KycUploader } from './KycUploader';
 import { ProfileSettingsForm } from './ProfileSettingsForm';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { AvatarUploader } from './AvatarUploader';
@@ -30,7 +29,8 @@ export default async function ProfilePage() {
   const role = profile.role;
   const isRenter = role === 'RENTER';
   const isDriver = role === 'DRIVER';
-  const isCustomer = role === 'CUSTOMER';
+  const isAdmin = role === 'ADMIN';
+  const kycStatus = profile.kycStatus;
 
   const documents = isRenter
     ? [
@@ -54,6 +54,12 @@ export default async function ProfilePage() {
             label: "Professional Driver's License",
             description: 'LTO professional license (JPEG, PNG, or PDF, max 5 MB)',
             currentUrl: profile.driverProfile?.licenseUrl ?? null,
+          },
+          {
+            type: 'backgroundCheck',
+            label: 'Background Check Clearance',
+            description: 'NBI or police clearance certificate',
+            currentUrl: profile.driverProfile?.backgroundCheckUrl ?? null,
           },
         ]
       : [
@@ -82,22 +88,14 @@ export default async function ProfilePage() {
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-          <Badge
-            label={profile.kycStatus.replace('_', ' ')}
-            variant={KYC_VARIANT[profile.kycStatus] ?? 'gray'}
-          />
+          {!isAdmin && (
+            <Badge label={kycStatus.replace('_', ' ')} variant={KYC_VARIANT[kycStatus] ?? 'gray'} />
+          )}
         </div>
         <p className="text-sm text-gray-500">
-          Manage your personal details, documents, and password.{' '}
-          {(isCustomer || isRenter) && (
-            <>
-              Looking for verification?{' '}
-              <Link href="/profile/kyc" className="text-blue-600 hover:underline">
-                Go to KYC
-              </Link>
-              .
-            </>
-          )}
+          {isAdmin
+            ? 'Manage your account details and password.'
+            : 'Manage your personal details, verification documents, and password.'}
         </p>
       </div>
 
@@ -119,11 +117,33 @@ export default async function ProfilePage() {
         isRenter={isRenter}
       />
 
-      {role !== 'ADMIN' && (
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            {isRenter ? 'Business Documents' : 'Identity Documents'}
-          </h2>
+      {!isAdmin && (
+        <section id="kyc" className="scroll-mt-20">
+          <div className="flex items-center gap-3 mb-1">
+            <h2 className="text-lg font-semibold text-gray-900">KYC Verification</h2>
+            <Badge label={kycStatus.replace('_', ' ')} variant={KYC_VARIANT[kycStatus] ?? 'gray'} />
+          </div>
+          <p className="text-xs text-gray-400 mb-4">
+            {isRenter
+              ? 'Business documents required to list your fleet. Files are securely stored and only visible to platform admins.'
+              : isDriver
+                ? 'Professional license and background clearance required before accepting trips.'
+                : 'Identity documents required before you can book a car. Files are securely stored and only visible to platform admins.'}
+          </p>
+
+          {kycStatus === 'VERIFIED' && (
+            <div className="mb-4 rounded-xl bg-green-50 border border-green-200 p-4 text-sm text-green-700">
+              Your account is fully verified. No further action required.
+            </div>
+          )}
+
+          {kycStatus === 'REJECTED' && (
+            <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+              Your documents were rejected. Please re-upload clear, valid documents and contact
+              support if you need help.
+            </div>
+          )}
+
           <div className="space-y-3">
             {documents.map((doc) => (
               <KycUploader
@@ -135,6 +155,13 @@ export default async function ProfilePage() {
               />
             ))}
           </div>
+
+          {kycStatus !== 'VERIFIED' && (
+            <p className="text-xs text-gray-400 mt-3">
+              After uploading, your KYC status changes to &quot;Under Review&quot;. Verification
+              typically takes 1–2 business days.
+            </p>
+          )}
         </section>
       )}
 

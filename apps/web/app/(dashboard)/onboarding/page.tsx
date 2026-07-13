@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { getMe } from '@/lib/api';
 import { Badge } from '@/components/ui/Badge';
-import { KycUploader } from '../profile/kyc/KycUploader';
+import { KycUploader } from '../profile/KycUploader';
 import { OnboardingContinue } from './OnboardingContinue';
 
 const KYC_VARIANT: Record<string, 'green' | 'yellow' | 'gray' | 'red'> = {

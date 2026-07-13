@@ -519,6 +519,7 @@ export interface UserProfile {
   } | null;
   driverProfile: {
     licenseUrl: string | null;
+    backgroundCheckUrl: string | null;
     kycStatus: string;
   } | null;
 }

@@ -13,7 +13,13 @@ interface SsoUpsertInput {
 }
 
 export type DocumentType =
-  'license' | 'licenseBack' | 'secondaryId' | 'businessPermit' | 'companyReg' | 'avatar';
+  | 'license'
+  | 'licenseBack'
+  | 'secondaryId'
+  | 'businessPermit'
+  | 'companyReg'
+  | 'backgroundCheck'
+  | 'avatar';
 
 const CUSTOMER_DOC_FIELDS: Partial<Record<DocumentType, string>> = {
   license: 'licenseUrl',
@@ -136,6 +142,17 @@ export class UsersService {
       await this.prisma.driverProfile.update({
         where: { userId },
         data: { licenseUrl: fileUrl },
+      });
+      return { fileUrl };
+    }
+
+    if (docType === 'backgroundCheck') {
+      if (!user.driverProfile) {
+        throw new BadRequestException(`Document type '${docType}' not applicable for this user`);
+      }
+      await this.prisma.driverProfile.update({
+        where: { userId },
+        data: { backgroundCheckUrl: fileUrl },
       });
       return { fileUrl };
     }

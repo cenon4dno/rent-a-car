@@ -93,24 +93,16 @@ export function Navbar() {
             {session ? (
               <div className="flex items-center gap-3">
                 {isCustomer && (
-                  <>
-                    <Link
-                      href="/bookings"
-                      className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                    >
-                      My Bookings
-                    </Link>
-                    <Link
-                      href="/profile/kyc"
-                      className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                    >
-                      KYC
-                    </Link>
-                  </>
-                )}
-                {role === 'RENTER' && (
                   <Link
-                    href="/profile/kyc"
+                    href="/bookings"
+                    className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    My Bookings
+                  </Link>
+                )}
+                {role !== 'ADMIN' && (
+                  <Link
+                    href="/profile#kyc"
                     className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
                   >
                     KYC
@@ -186,9 +178,9 @@ export function Navbar() {
                       My Bookings
                     </Link>
                   )}
-                  {(isCustomer || role === 'RENTER') && (
+                  {role !== 'ADMIN' && (
                     <Link
-                      href="/profile/kyc"
+                      href="/profile#kyc"
                       className="text-sm text-gray-700 hover:text-blue-600 py-1"
                     >
                       KYC Documents
