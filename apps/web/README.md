@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# apps/web — Next.js 15 Web Frontend
 
-## Getting Started
+The customer-facing and admin web application for the RentACar marketplace. Built with Next.js 15 App Router and Tailwind CSS.
 
-First, run the development server:
+## Key conventions
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **App Router** only — all routes live under `app/`. No `pages/` directory.
+- **Server Components by default** — add `'use client'` only when browser APIs or interactivity are required.
+- **Tailwind CSS** for all styling — no CSS modules or styled-components.
+- **State management** — Zustand for client-side global state (booking flow, compare tray).
+- **API calls** — typed fetch helpers in `lib/api.ts`. Never call the database directly from the web app.
+- **Auth** — NextAuth.js v5. Use `useSession()` in client components, `auth()` in server components.
+
+## Structure
+
+```
+app/
+  (auth)/login/             Login page — SSO + email/password
+  (public)/                 Unauthenticated pages
+    home/                   Homepage with hero, featured cars, partners
+    search/                 Vehicle search results + filters
+    vehicle/[id]/           Vehicle detail + booking form
+    renter/[id]/            Public renter profile
+    driver/[id]/            Public driver profile
+    customer/[id]/          Customer profile (renter/admin only)
+    how-it-works/           How the platform works
+    partners/               Partner rental companies directory
+    contact/                Contact form
+    feedback/               Complaints and feedback form
+    legal/[slug]/           Dynamic legal pages (T&C, Privacy, etc.)
+    compare/                Side-by-side vehicle comparison
+  (dashboard)/              Authenticated pages
+    bookings/               My bookings list
+    messages/               Inbox + conversation threads (WebSocket)
+    profile/                User profile + KYC documents
+    admin/                  Admin dashboard
+      users/                User management
+      feedback/             Feedback inbox with reply/status
+      homepage/             Carousel + featured vehicle editor
+      legal/                CMS for legal pages
+      disputes/             Dispute resolution tickets
+      analytics/            Platform BI (GMV, commission, health)
+    renter/                 Renter dashboard
+      fleet/                Vehicle CRUD
+      bookings/             Booking management
+      analytics/            Fleet utilization + revenue BI
+    driver/
+      dashboard/            Driver schedule + active bookings
+  api/auth/[...nextauth]/   NextAuth route handler
+
+components/
+  ui/                       Atoms: Button, Badge, VehicleCard, PartnerCard
+  layout/                   Navbar, Footer
+  booking/                  BookingForm, DatePicker, AddOns
+  maps/                     LocationAutocomplete, MapLocationPicker
+
+lib/
+  auth.ts                   NextAuth config (providers, callbacks, JWT shape)
+  api.ts                    Typed fetch helpers for the NestJS API
+  googleMaps.ts             Google Maps JS loader
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# From repo root
+npm run dev:web             # http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# From apps/web
+npm run dev
+npm run build
+npm run lint
+```
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<random-32-char-string>
+NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# SSO providers (all optional in dev)
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
+AUTH_MICROSOFT_ENTRA_ID_ID=
+AUTH_MICROSOFT_ENTRA_ID_SECRET=
+AUTH_MICROSOFT_ENTRA_ID_ISSUER=
+AUTH_FACEBOOK_ID=
+AUTH_FACEBOOK_SECRET=
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Google Maps (location autocomplete — degrades gracefully without key)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+```

@@ -1,36 +1,43 @@
-# Rent-a-Car
+# RentACar — Multi-Tenant Car Rental Marketplace
 
-A multi-tenant car rental marketplace — think Uber for car rentals. Rental companies post their fleets, customers search and book, and the platform handles scheduling, payments, and BI dashboards.
+A marketplace platform where multiple car rental companies list their fleets and customers book vehicles in one unified experience — similar to Grab or Airbnb, but for car rentals.
 
 ## Architecture
 
 ```
 rent-a-car/
 ├── apps/
-│   ├── web/       # Next.js 16 — customer and admin web app
-│   ├── api/       # NestJS — shared REST API + Prisma ORM
+│   ├── web/       # Next.js 15 — customer and admin web app
+│   ├── api/       # NestJS — shared REST + WebSocket API + Prisma ORM
 │   └── mobile/    # React Native (Expo) — iOS and Android
-├── packages/
-│   └── shared/    # Shared types and utilities
+├── packages/      # Shared packages (future use)
 ├── nginx/         # Reverse proxy config
-└── docs/          # Loop state, deployment guide, backlog
+└── docs/          # Setup, API reference, deployment, build guides
 ```
 
 **Internet → Nginx (port 80/443) → Next.js (3000) / NestJS API (4000)**
 
 ## Tech Stack
 
-| Layer          | Technology                                     |
-| -------------- | ---------------------------------------------- |
-| Web frontend   | Next.js 16, React 19, Tailwind CSS v4          |
-| Mobile         | React Native 0.76, Expo 52, NativeWind         |
-| Backend API    | NestJS 11, Passport JWT, Swagger               |
-| Database       | Prisma ORM — SQLite (dev) / PostgreSQL (prod)  |
-| Auth           | NextAuth v5 — Google, Microsoft, Apple SSO     |
-| Payments       | PayMongo (GCash, Maya, cards)                  |
-| Infrastructure | Azure App Service, Nginx, GitHub Actions CI/CD |
-| Code quality   | ESLint, Prettier, Husky pre-commit hooks       |
-| Testing        | Jest (unit), Playwright (E2E)                  |
+| Layer          | Technology                                                     |
+| -------------- | -------------------------------------------------------------- |
+| Web frontend   | Next.js 15, React 18, Tailwind CSS                             |
+| Mobile         | React Native 0.76, Expo 52, NativeWind                         |
+| Backend API    | NestJS 11, Passport JWT, Socket.io, Swagger                    |
+| Database       | Prisma ORM — SQLite (dev) / PostgreSQL (prod)                  |
+| Auth           | NextAuth v5 — Google, Microsoft, Apple, Meta SSO + credentials |
+| Payments       | PayMongo (GCash, Maya, cards)                                  |
+| Infrastructure | Azure App Service, Nginx, GitHub Actions CI/CD                 |
+| Code quality   | ESLint, Prettier, Husky pre-commit hooks                       |
+
+## Documentation
+
+| Document                                     | Description                                 |
+| -------------------------------------------- | ------------------------------------------- |
+| [docs/local-setup.md](docs/local-setup.md)   | Full local dev environment setup + env vars |
+| [docs/api.md](docs/api.md)                   | REST + WebSocket API reference              |
+| [docs/mobile-build.md](docs/mobile-build.md) | Building the Android APK for testing        |
+| [docs/deployment.md](docs/deployment.md)     | Azure App Service production deployment     |
 
 ## Prerequisites
 
@@ -47,47 +54,31 @@ npm install
 
 ### 2. Configure environment variables
 
+See [docs/local-setup.md](docs/local-setup.md) for the full list. Minimum required:
+
 **API** (`apps/api/.env`):
 
 ```env
-DATABASE_URL="file:./dev.db"
-JWT_SECRET="your-strong-secret-here"
+DATABASE_URL="file:./prisma/dev.db"
+JWT_SECRET="dev-jwt-secret"
 PORT=4000
 ALLOWED_ORIGINS="http://localhost:3000"
-
-# Optional — leave blank to use stub payments in dev
-PAYMONGO_SECRET_KEY=
-PAYMONGO_WEBHOOK_SECRET=
 ```
 
 **Web** (`apps/web/.env.local`):
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:4000
-
-# Generate with: openssl rand -hex 32
-AUTH_SECRET=your-auth-secret-here
-
-# Google OAuth — https://console.cloud.google.com
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-# Microsoft (Azure AD) — https://portal.azure.com
-MICROSOFT_CLIENT_ID=
-MICROSOFT_CLIENT_SECRET=
-MICROSOFT_TENANT_ID=common
-
-# Apple Sign In — https://developer.apple.com
-APPLE_CLIENT_ID=
-APPLE_CLIENT_SECRET=
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=dev-nextauth-secret
+NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1
 ```
 
 ### 3. Set up the database
 
 ```bash
 cd apps/api
-npm run db:migrate   # run migrations
-npm run db:seed      # seed demo data
+npx prisma migrate dev
+npm run db:seed
 ```
 
 ### 4. Start development servers
@@ -98,12 +89,23 @@ npm run dev:api   # NestJS API on http://localhost:4000
 npm run dev:web   # Next.js web on http://localhost:3000
 ```
 
+Swagger UI: `http://localhost:4000/api/docs`
+
 **Mobile:**
 
 ```bash
 cd apps/mobile
-npx expo start
+npx expo start    # scan QR with Expo Go app
 ```
+
+## Dev Accounts (after seeding)
+
+| Role     | Email                       | Password env var           | Fallback      |
+| -------- | --------------------------- | -------------------------- | ------------- |
+| Admin    | `cenon4dno@gmail.com`       | `ADMIN_SEED_PASSWORD`      | `password123` |
+| Renter   | `metrocarrentals@dev.local` | `RENTER_SEED_PASSWORD`     | `password123` |
+| Customer | `testuser@dev.local`        | `DEV_USER_SEED_PASSWORD`   | `password123` |
+| Driver   | `testdriver@dev.local`      | `DEV_DRIVER_SEED_PASSWORD` | `password123` |
 
 ## Available Scripts
 
