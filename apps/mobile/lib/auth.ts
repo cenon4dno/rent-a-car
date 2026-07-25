@@ -29,7 +29,7 @@ export async function clearAuth() {
 
 export async function emailLogin(email: string, password: string): Promise<AuthUser | null> {
   try {
-    const apiBase = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
+    const apiBase = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:4000/api/v1';
     const res = await fetch(`${apiBase}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -56,7 +56,7 @@ export async function ssoExchange(
   image?: string,
 ): Promise<AuthUser | null> {
   try {
-    const apiBase = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
+    const apiBase = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:4000/api/v1';
     const res = await fetch(`${apiBase}/auth/sso`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
