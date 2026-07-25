@@ -76,10 +76,25 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Company */}
           <div>
-            <h4 className="text-white text-sm font-semibold mb-3">Legal</h4>
+            <h4 className="text-white text-sm font-semibold mb-3">Company</h4>
             <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/partners" className="hover:text-white transition-colors">
+                  Our Partners
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white transition-colors">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/feedback" className="hover:text-white transition-colors">
+                  Feedback
+                </Link>
+              </li>
               <li>
                 <Link href="/legal/terms-of-service" className="hover:text-white transition-colors">
                   Terms of Service
@@ -88,11 +103,6 @@ export function Footer() {
               <li>
                 <Link href="/legal/privacy-policy" className="hover:text-white transition-colors">
                   Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/legal/contact-us" className="hover:text-white transition-colors">
-                  Contact Us
                 </Link>
               </li>
             </ul>

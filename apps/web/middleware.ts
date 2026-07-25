@@ -15,6 +15,8 @@ const PUBLIC_PATHS = [
   '/driver',
   '/how-it-works',
   '/partners',
+  '/contact',
+  '/feedback',
 ];
 const BOOKING_PATHS = ['/booking', '/bookings'];
 

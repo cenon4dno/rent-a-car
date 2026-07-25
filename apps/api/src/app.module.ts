@@ -15,6 +15,7 @@ import { DriversModule } from './drivers/drivers.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { KycModule } from './kyc/kyc.module';
 import { MessagesModule } from './messages/messages.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MessagesModule } from './messages/messages.module';
     DriversModule,
     KycModule,
     MessagesModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [AppService],
