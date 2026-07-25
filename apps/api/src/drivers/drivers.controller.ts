@@ -19,6 +19,14 @@ export class DriversController {
     return { data: await this.driversService.create(req.user.id, dto) };
   }
 
+  @Get('dashboard')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('DRIVER')
+  async getDashboard(@Req() req: { user: { id: string } }) {
+    return { data: await this.driversService.getDashboard(req.user.id) };
+  }
+
   @Get('my')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)

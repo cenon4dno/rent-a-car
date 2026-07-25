@@ -133,6 +133,40 @@ export class DriversService {
     });
   }
 
+  async getDashboard(userId: string) {
+    const driver = await this.prisma.driverProfile.findUnique({
+      where: { userId },
+      include: {
+        user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        bookings: {
+          where: { status: { in: ['PENDING', 'CONFIRMED', 'ACTIVE'] } },
+          orderBy: { startDate: 'asc' },
+          take: 20,
+          include: {
+            vehicle: {
+              select: { make: true, model: true, year: true, plateNumber: true },
+            },
+            customer: { select: { user: { select: { name: true } } } },
+          },
+        },
+        _count: { select: { bookings: true } },
+      },
+    });
+    if (!driver) throw new NotFoundException('Driver profile not found');
+    return {
+      profile: {
+        id: driver.id,
+        userId: driver.userId,
+        licenseUrl: driver.licenseUrl,
+        kycStatus: driver.kycStatus,
+        user: driver.user,
+        renterId: driver.renterId,
+        _count: driver._count,
+      },
+      bookings: driver.bookings,
+    };
+  }
+
   async remove(driverProfileId: string, renterUserId: string) {
     const renterProfile = await this.prisma.renterProfile.findUnique({
       where: { userId: renterUserId },
