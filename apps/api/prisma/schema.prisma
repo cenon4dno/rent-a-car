@@ -75,6 +75,8 @@ model User {
   driverProfile   DriverProfile?
   customerProfile CustomerProfile?
   sessions        Session[]
+  conversations   ConversationParticipant[]
+  sentMessages    Message[]
 }
 
 model Session {
@@ -197,6 +199,7 @@ model Booking {
   payment       Payment?
   review        Review?
   renterReview  RenterReview?
+  conversations Conversation[]
 
   @@index([vehicleId, startDate, endDate])
   @@index([customerId])
@@ -287,6 +290,46 @@ model Feedback {
   adminReply  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  bookingId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking      Booking?                  @relation(fields: [bookingId], references: [id])
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([bookingId])
+  @@index([updatedAt])
+}
+
+model ConversationParticipant {
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  lastReadAt     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }
 
 model HomepageConfig {

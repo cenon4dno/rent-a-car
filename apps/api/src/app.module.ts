@@ -14,6 +14,7 @@ import { ChatModule } from './chat/chat.module';
 import { DriversModule } from './drivers/drivers.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { KycModule } from './kyc/kyc.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { KycModule } from './kyc/kyc.module';
     ChatModule,
     DriversModule,
     KycModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
