@@ -736,3 +736,183 @@ export async function getDisputes(token: string): Promise<ApiResponse<Dispute[]>
     cache: 'no-store',
   });
 }
+
+// ─── Homepage Config ─────────────────────────────────────────────────────────
+
+export interface CarouselSlide {
+  id: string;
+  image: string;
+  headline: string;
+  subtext: string;
+  ctaLabel: string;
+  ctaLink: string;
+}
+
+export interface HomepageConfig {
+  id?: string;
+  slides: CarouselSlide[];
+  featuredMode: 'AUTO' | 'MANUAL';
+  featuredIds: string[];
+  updatedAt?: string;
+}
+
+export async function getHomepageConfig() {
+  return apiFetch<HomepageConfig>('/homepage-config');
+}
+
+export async function updateHomepageConfig(data: Partial<HomepageConfig>, token: string) {
+  return apiFetch<HomepageConfig>('/homepage-config', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+export interface MessageUser {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string | null;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+  sender: MessageUser;
+}
+
+export interface Conversation {
+  id: string;
+  bookingId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  participants: Array<{ id: string; userId: string; lastReadAt: string | null; user: MessageUser }>;
+  booking: { id: string; vehicle: { make: string; model: string; year: number } } | null;
+  lastMessage: ConversationMessage | null;
+  unreadCount: number;
+}
+
+export async function listConversations(token: string, all = false) {
+  return apiFetch<ApiResponse<Conversation[]>>(`/messages/conversations${all ? '?all=true' : ''}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+export async function openConversation(
+  recipientId: string,
+  bookingId: string | undefined,
+  token: string,
+) {
+  return apiFetch<ApiResponse<Conversation>>('/messages/conversations', {
+    method: 'POST',
+    body: JSON.stringify({ recipientId, bookingId }),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function getConversation(id: string, token: string) {
+  return apiFetch<ApiResponse<Conversation & { messages: ConversationMessage[] }>>(
+    `/messages/conversations/${id}`,
+    { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' },
+  );
+}
+
+export async function sendMessage(conversationId: string, body: string, token: string) {
+  return apiFetch<ApiResponse<ConversationMessage>>(
+    `/messages/conversations/${conversationId}/messages`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ body }),
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+}
+
+export async function getUnreadCount(token: string) {
+  return apiFetch<ApiResponse<{ count: number }>>('/messages/unread-count', {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
+export interface FeedbackItem {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  category: string;
+  message: string;
+  status: string;
+  adminReply: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function submitFeedback(body: {
+  name: string;
+  email: string;
+  subject: string;
+  category: string;
+  message: string;
+}) {
+  return apiFetch<ApiResponse<FeedbackItem>>('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function listFeedback(token: string) {
+  return apiFetch<ApiResponse<FeedbackItem[]>>('/feedback', {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+}
+
+export async function updateFeedbackStatus(
+  id: string,
+  status: string,
+  adminReply: string | null,
+  token: string,
+) {
+  return apiFetch<ApiResponse<FeedbackItem>>(`/feedback/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, adminReply }),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ─── Driver profile (private) ─────────────────────────────────────────────────
+
+export interface DriverBooking {
+  id: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  vehicle: { make: string; model: string; year: number; plateNumber: string };
+  customerProfile: { user: { name: string } };
+}
+
+export async function getDriverDashboard(token: string) {
+  return apiFetch<
+    ApiResponse<{
+      profile: {
+        id: string;
+        userId: string;
+        licenseUrl: string | null;
+        kycStatus: string;
+        user: { name: string; email: string; avatarUrl: string | null };
+        renterId: string | null;
+        _count: { bookings: number };
+      };
+      bookings: DriverBooking[];
+    }>
+  >('/drivers/dashboard', { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+}

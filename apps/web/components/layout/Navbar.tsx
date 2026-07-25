@@ -2,8 +2,33 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000';
+
+function useUnreadCount(apiToken: string | undefined) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!apiToken) return;
+    fetch(`${API_URL}/api/v1/messages/unread-count`, {
+      headers: { Authorization: `Bearer ${apiToken}` },
+    })
+      .then((r) => r.json())
+      .then((j) => setCount((j as { data?: { count?: number } })?.data?.count ?? 0))
+      .catch(() => {});
+    const interval = setInterval(() => {
+      fetch(`${API_URL}/api/v1/messages/unread-count`, {
+        headers: { Authorization: `Bearer ${apiToken}` },
+      })
+        .then((r) => r.json())
+        .then((j) => setCount((j as { data?: { count?: number } })?.data?.count ?? 0))
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [apiToken]);
+  return count;
+}
 
 // Public marketing links are onboarding-only: hidden once signed in, except
 // Browse Cars which stays for customers. Staff roles see their own dashboards.
@@ -29,7 +54,10 @@ function navLinksForRole(role: string | undefined, authenticated: boolean) {
         { href: '/renter/bookings', label: 'Bookings' },
       ];
     case 'DRIVER':
-      return [{ href: '/profile', label: 'My Profile' }];
+      return [
+        { href: '/driver/dashboard', label: 'My Schedule' },
+        { href: '/profile', label: 'My Profile' },
+      ];
     default:
       // authenticated customer
       return [{ href: '/search', label: 'Browse Cars' }];
@@ -40,8 +68,10 @@ export function Navbar() {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const role = (session?.user as { role?: string })?.role;
+  const apiToken = (session as { apiToken?: string } | null)?.apiToken;
   const navLinks = navLinksForRole(role, !!session);
   const isCustomer = !!session && (!role || role === 'CUSTOMER');
+  const unreadMessages = useUnreadCount(apiToken);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -100,6 +130,17 @@ export function Navbar() {
                     My Bookings
                   </Link>
                 )}
+                <Link
+                  href="/messages"
+                  className="relative text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Messages
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-2 -right-3 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
+                      {unreadMessages > 9 ? '9+' : unreadMessages}
+                    </span>
+                  )}
+                </Link>
                 {role !== 'ADMIN' && (
                   <Link
                     href="/profile#kyc"
@@ -178,6 +219,17 @@ export function Navbar() {
                       My Bookings
                     </Link>
                   )}
+                  <Link
+                    href="/messages"
+                    className="relative text-sm text-gray-700 hover:text-blue-600 py-1 inline-flex items-center gap-1"
+                  >
+                    Messages
+                    {unreadMessages > 0 && (
+                      <span className="w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
+                        {unreadMessages > 9 ? '9+' : unreadMessages}
+                      </span>
+                    )}
+                  </Link>
                   {role !== 'ADMIN' && (
                     <Link
                       href="/profile#kyc"
