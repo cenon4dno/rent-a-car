@@ -27,6 +27,27 @@ export async function clearAuth() {
   await SecureStore.deleteItemAsync(USER_KEY);
 }
 
+export async function emailLogin(email: string, password: string): Promise<AuthUser | null> {
+  try {
+    const apiBase = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
+    const res = await fetch(`${apiBase}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as {
+      token: string;
+      user: { id: string; name: string; email: string; role: string };
+    };
+    const user: AuthUser = { ...json.user, apiToken: json.token };
+    await saveAuth(user);
+    return user;
+  } catch {
+    return null;
+  }
+}
+
 export async function ssoExchange(
   provider: string,
   providerAccountId: string,

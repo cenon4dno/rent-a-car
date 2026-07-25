@@ -11,9 +11,20 @@ import { useRouter } from 'expo-router';
 import { searchVehicles, Vehicle } from '@/lib/api';
 import { VehicleCard } from '@/components/ui/VehicleCard';
 
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+function tomorrowStr() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const [location, setLocation] = useState('');
+  const [startDate, setStartDate] = useState(todayStr());
+  const [endDate, setEndDate] = useState(tomorrowStr());
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -22,7 +33,12 @@ export default function HomeScreen() {
     setLoading(true);
     setSearched(true);
     try {
-      const res = await searchVehicles({ location: location || undefined, limit: 20 });
+      const res = await searchVehicles({
+        location: location || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        limit: 20,
+      });
       setVehicles(res.data);
     } catch {
       setVehicles([]);
@@ -47,9 +63,34 @@ export default function HomeScreen() {
             placeholder="Manila, Cebu, Davao..."
             value={location}
             onChangeText={setLocation}
-            returnKeyType="search"
-            onSubmitEditing={handleSearch}
+            returnKeyType="next"
           />
+          <View className="flex-row gap-3 mb-3">
+            <View className="flex-1">
+              <Text className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                Pick-up Date
+              </Text>
+              <TextInput
+                className="text-sm text-gray-900 border-b border-gray-200 pb-2"
+                placeholder="YYYY-MM-DD"
+                value={startDate}
+                onChangeText={setStartDate}
+                keyboardType="numeric"
+              />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                Drop-off Date
+              </Text>
+              <TextInput
+                className="text-sm text-gray-900 border-b border-gray-200 pb-2"
+                placeholder="YYYY-MM-DD"
+                value={endDate}
+                onChangeText={setEndDate}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
           <TouchableOpacity
             className="bg-blue-600 rounded-xl py-3 items-center"
             onPress={handleSearch}

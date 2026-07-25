@@ -53,6 +53,14 @@ export default function BookingConfirmationScreen() {
   const ref = `RAC-${booking.id.slice(0, 8).toUpperCase()}`;
   const statusStyle = STATUS_COLORS[booking.status] ?? 'text-gray-600 bg-gray-100';
 
+  // Deterministic 7x7 QR-like grid seeded by reference number
+  const qrGrid = Array.from({ length: 7 }, (_, row) =>
+    Array.from({ length: 7 }, (_, col) => {
+      const v = ref.charCodeAt((row * 7 + col) % ref.length) + row * 7 + col;
+      return v % 3 !== 0;
+    }),
+  );
+
   return (
     <ScrollView className="flex-1 bg-gray-50">
       {/* Header */}
@@ -65,6 +73,27 @@ export default function BookingConfirmationScreen() {
             {booking.status}
           </Text>
         </View>
+      </View>
+
+      {/* QR Code */}
+      <View className="items-center py-6 bg-white border-b border-gray-100">
+        <View className="p-3 bg-white border-2 border-gray-800 rounded-lg">
+          {qrGrid.map((row, ri) => (
+            <View key={ri} style={{ flexDirection: 'row' }}>
+              {row.map((filled, ci) => (
+                <View
+                  key={ci}
+                  style={{
+                    width: 10,
+                    height: 10,
+                    backgroundColor: filled ? '#1f2937' : '#ffffff',
+                  }}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+        <Text className="text-xs text-gray-400 mt-2">Show this QR at pick-up</Text>
       </View>
 
       <View className="px-4 py-5 space-y-4">

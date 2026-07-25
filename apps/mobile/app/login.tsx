@@ -1,11 +1,20 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { useAutoDiscovery, useAuthRequest, makeRedirectUri } from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { ssoExchange } from '@/lib/auth';
+import { ssoExchange, emailLogin } from '@/lib/auth';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -14,7 +23,9 @@ const MICROSOFT_TENANT = process.env.EXPO_PUBLIC_MICROSOFT_TENANT_ID ?? 'common'
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState<'google' | 'microsoft' | 'apple' | null>(null);
+  const [loading, setLoading] = useState<'google' | 'microsoft' | 'apple' | 'email' | null>(null);
+  const [emailForm, setEmailForm] = useState({ email: '', password: '' });
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   // ── Google ──────────────────────────────────────────────────────────────────
   const [, , promptGoogle] = Google.useAuthRequest({
@@ -130,10 +141,31 @@ export default function LoginScreen() {
     }
   };
 
+  const handleEmailLogin = async () => {
+    if (!emailForm.email || !emailForm.password) {
+      Alert.alert('Missing fields', 'Please enter email and password.');
+      return;
+    }
+    setLoading('email');
+    try {
+      const user = await emailLogin(emailForm.email, emailForm.password);
+      if (user) router.replace('/(tabs)');
+      else Alert.alert('Sign-in failed', 'Invalid email or password.');
+    } catch {
+      Alert.alert('Error', 'Sign-in failed. Please try again.');
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
-    <View className="flex-1 bg-white px-6 justify-center">
+    <ScrollView
+      className="flex-1 bg-white"
+      contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 60 }}
+      keyboardShouldPersistTaps="handled"
+    >
       {/* Logo */}
-      <View className="items-center mb-12">
+      <View className="items-center mb-10">
         <View className="w-16 h-16 bg-blue-600 rounded-2xl items-center justify-center mb-4">
           <Text className="text-white text-3xl">🚗</Text>
         </View>
@@ -143,34 +175,75 @@ export default function LoginScreen() {
         <Text className="text-gray-400 text-sm mt-1">Sign in to continue</Text>
       </View>
 
-      {/* SSO buttons */}
-      <View className="space-y-3">
-        <SSOButton
-          emoji="🔵"
-          label="Continue with Google"
-          onPress={handleGoogleSignIn}
-          loading={loading === 'google'}
-        />
-        <SSOButton
-          emoji="🟦"
-          label="Continue with Microsoft"
-          onPress={handleMicrosoftSignIn}
-          loading={loading === 'microsoft'}
-        />
-        {Platform.OS === 'ios' && (
-          <SSOButton
-            emoji="⚫"
-            label="Continue with Apple"
-            onPress={handleAppleSignIn}
-            loading={loading === 'apple'}
+      {/* Email/password form */}
+      {showEmailForm ? (
+        <View className="space-y-3 mb-6">
+          <TextInput
+            className="border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 bg-white"
+            placeholder="Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={emailForm.email}
+            onChangeText={(v) => setEmailForm((f) => ({ ...f, email: v }))}
           />
-        )}
-      </View>
+          <TextInput
+            className="border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 bg-white"
+            placeholder="Password"
+            secureTextEntry
+            value={emailForm.password}
+            onChangeText={(v) => setEmailForm((f) => ({ ...f, password: v }))}
+          />
+          <TouchableOpacity
+            className="bg-blue-600 rounded-xl py-4 items-center"
+            onPress={handleEmailLogin}
+            disabled={loading === 'email'}
+            activeOpacity={0.8}
+          >
+            {loading === 'email' ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-white font-semibold">Sign In</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowEmailForm(false)}>
+            <Text className="text-center text-sm text-gray-400">Use SSO instead</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View className="space-y-3 mb-6">
+          <SSOButton
+            emoji="📧"
+            label="Continue with Email"
+            onPress={() => setShowEmailForm(true)}
+            loading={false}
+          />
+          <SSOButton
+            emoji="🔵"
+            label="Continue with Google"
+            onPress={handleGoogleSignIn}
+            loading={loading === 'google'}
+          />
+          <SSOButton
+            emoji="🟦"
+            label="Continue with Microsoft"
+            onPress={handleMicrosoftSignIn}
+            loading={loading === 'microsoft'}
+          />
+          {Platform.OS === 'ios' && (
+            <SSOButton
+              emoji="⚫"
+              label="Continue with Apple"
+              onPress={handleAppleSignIn}
+              loading={loading === 'apple'}
+            />
+          )}
+        </View>
+      )}
 
-      <Text className="text-center text-gray-300 text-xs mt-8">
+      <Text className="text-center text-gray-300 text-xs mt-4">
         By continuing, you agree to our Terms of Service and Privacy Policy
       </Text>
-    </View>
+    </ScrollView>
   );
 }
 
