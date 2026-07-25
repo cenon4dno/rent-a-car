@@ -145,4 +145,47 @@ export class AdminService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async getHomepageConfig() {
+    const config = await this.prisma.homepageConfig.findFirst();
+    if (!config) {
+      return { slides: [], featuredMode: 'AUTO', featuredIds: [] };
+    }
+    return {
+      id: config.id,
+      slides: JSON.parse(config.slides) as unknown[],
+      featuredMode: config.featuredMode,
+      featuredIds: JSON.parse(config.featuredIds) as string[],
+      updatedAt: config.updatedAt,
+    };
+  }
+
+  async updateHomepageConfig(data: {
+    slides?: unknown[];
+    featuredMode?: string;
+    featuredIds?: string[];
+  }) {
+    const existing = await this.prisma.homepageConfig.findFirst();
+    const updateData: Record<string, string> = {};
+    if (data.slides !== undefined) updateData.slides = JSON.stringify(data.slides);
+    if (data.featuredMode !== undefined) updateData.featuredMode = data.featuredMode;
+    if (data.featuredIds !== undefined) updateData.featuredIds = JSON.stringify(data.featuredIds);
+
+    const config = existing
+      ? await this.prisma.homepageConfig.update({ where: { id: existing.id }, data: updateData })
+      : await this.prisma.homepageConfig.create({
+          data: {
+            slides: updateData.slides ?? '[]',
+            featuredMode: updateData.featuredMode ?? 'AUTO',
+            featuredIds: updateData.featuredIds ?? '[]',
+          },
+        });
+    return {
+      id: config.id,
+      slides: JSON.parse(config.slides) as unknown[],
+      featuredMode: config.featuredMode,
+      featuredIds: JSON.parse(config.featuredIds) as string[],
+      updatedAt: config.updatedAt,
+    };
+  }
 }

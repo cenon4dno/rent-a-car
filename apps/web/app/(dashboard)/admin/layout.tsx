@@ -6,6 +6,8 @@ const NAV = [
   { href: '/admin', label: 'Overview', exact: true },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/disputes', label: 'Disputes' },
+  { href: '/admin/feedback', label: 'Feedback' },
+  { href: '/admin/homepage', label: 'Homepage' },
   { href: '/admin/config', label: 'Config' },
   { href: '/admin/legal', label: 'Legal CMS' },
 ];

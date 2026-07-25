@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsString, IsOptional, Max, Min } from 'class-validator';
+import { IsEnum, IsNumber, IsString, IsOptional, IsIn, Max, Min } from 'class-validator';
 import { KycStatus } from '@prisma/client';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -45,6 +45,37 @@ class UpsertLegalPageDto {
   @IsString()
   @IsOptional()
   slug?: string;
+}
+
+class UpdateHomepageConfigDto {
+  @IsOptional()
+  slides?: unknown[];
+
+  @IsOptional()
+  @IsIn(['AUTO', 'MANUAL'])
+  featuredMode?: string;
+
+  @IsOptional()
+  featuredIds?: string[];
+}
+
+@ApiTags('homepage-config')
+@Controller('homepage-config')
+export class HomepageConfigController {
+  constructor(private readonly adminService: AdminService) {}
+
+  @Get()
+  getConfig() {
+    return this.adminService.getHomepageConfig();
+  }
+
+  @Patch()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  updateConfig(@Body() dto: UpdateHomepageConfigDto) {
+    return this.adminService.updateHomepageConfig(dto);
+  }
 }
 
 @ApiTags('admin')
