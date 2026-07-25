@@ -1,5 +1,24 @@
 # Observations Log
 
+## 2026-07-25 — Iteration 24 (Backlog Completion Sprint)
+
+**Goal:** Complete all remaining active backlog items: Android mobile app, in-app messaging, admin homepage config, feedback/contact pages, /how-it-works, /partners, driver dashboard.
+**Outcome:** Done — all 7 active items completed and committed.
+**Findings:**
+
+- **Messaging (WebSocket):** Socket.io gateway on `/ws` namespace with JWT handshake auth works cleanly in NestJS. `emitToUser(userId, event, data)` rooms pattern (`user:{id}`) is clean and avoids broadcasting to wrong clients. Frontend ConversationThread uses `io()` directly (not a hook) since connection lifecycle must outlive rerenders.
+- **Badge component API mismatch:** The existing Badge component uses a `label` prop, not React `children`. Several new pages wrote `<Badge>text</Badge>` and failed TypeScript. All corrected to `<Badge label="..." />`. This pattern should be checked on every new Badge usage.
+- **HomepageConfig JSON fields:** Prisma's SQLite-compatible string fields store slides/featuredIds as JSON strings — the service layer `JSON.parse`/`JSON.stringify` boundary is important. Callers always receive typed objects, never raw strings.
+- **eslint flat config + no-img-element:** When `eslint-disable-next-line @next/next/no-img-element` appears in a file but the `@next/next` plugin isn't fully resolved in the flat config context, ESLint throws "Definition for rule not found" instead of suppressing. Fix: use Next.js `<Image unoptimized>` for dynamic URLs in admin tools (avoids the eslint workaround entirely).
+- **Mobile QR code:** Deterministic 7×7 grid from booking ID hash works without any native library. No onError handler needed (pure View grid, no network request).
+- **Backlog at zero:** All P1–P3 items are now complete. The project is feature-complete per CLAUDE.md spec. Remaining work (if any) would be production hardening, real payment go-live, and deployment pipeline tuning.
+
+**Next Actions:**
+
+- _(none — backlog is empty)_
+
+---
+
 ## 2026-07-12 — Iteration 23 (Public Legal Pages)
 
 **Goal:** [P2] Public legal pages — footer legal links must work without authentication
